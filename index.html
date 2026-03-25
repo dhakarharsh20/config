@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Tempsens Configurator</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+
+  <div class="container">
+
+    <h1>🔥 Tempsens Configurator</h1>
+
+    <div class="layout">
+
+      <!-- LEFT PANEL -->
+      <div class="panel">
+        <h3>Configuration</h3>
+
+        <label>Type</label>
+        <select>
+          <option>Thermocouple</option>
+          <option>RTD</option>
+        </select>
+
+        <label>Subtype</label>
+        <select>
+          <option>K</option>
+          <option>J</option>
+          <option>N</option>
+          <option>R</option>
+          <option>S</option>
+        </select>
+
+        <label>Sheath</label>
+        <select>
+          <option>SS316</option>
+          <option>SS310</option>
+          <option>Inconel 600</option>
+          <option>Ceramic</option>
+        </select>
+
+        <label>Diameter</label>
+        <select>
+          <option>3mm</option>
+          <option>6mm</option>
+          <option>8mm</option>
+        </select>
+
+        <label>Length</label>
+        <input type="text" value="300mm" />
+
+        <label>Connection</label>
+        <select>
+          <option>Threaded</option>
+          <option>Flanged</option>
+          <option>Welded</option>
+        </select>
+
+        <label>Head</label>
+        <select>
+          <option>Weatherproof</option>
+          <option>Flameproof</option>
+          <option>Mini</option>
+        </select>
+
+        <label>Cable</label>
+        <select>
+          <option>PVC</option>
+          <option>PTFE</option>
+          <option>Fiberglass</option>
+        </select>
+      </div>
+
+      <!-- CENTER VIEWER -->
+      <div class="viewer">
+        <h3>Preview</h3>
+
+        <div class="model-box">
+          <p>Type: Thermocouple</p>
+          <p>Subtype: K</p>
+          <p>Material: SS316</p>
+          <p>Length: 300mm</p>
+        </div>
+      </div>
+
+      <!-- RIGHT PANEL -->
+      <div class="panel">
+        <h3>Output</h3>
+
+        <p><strong>Model Code:</strong></p>
+        <p class="code">TC-K-SS316-6mm-300mm-Threaded-WP-PVC</p>
+
+        <button>Download Datasheet</button>
+      </div>
+
+    </div>
+  </div>
+
+</body>
+</html>
