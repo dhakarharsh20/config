@@ -3,100 +3,125 @@
 <head>
   <meta charset="UTF-8" />
   <title>Tempsens Configurator</title>
+
+  <!-- Styles -->
   <link rel="stylesheet" href="styles.css" />
+
+  <!-- Three.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
 </head>
 
 <body>
 
-  <div class="container">
+<div class="container">
 
-    <h1>🔥 Tempsens Configurator</h1>
+  <h1> Tempsens Configurator</h1>
 
-    <div class="layout">
+  <div class="layout">
 
-      <!-- LEFT PANEL -->
-      <div class="panel">
-        <h3>Configuration</h3>
+    <!-- LEFT PANEL -->
+    <div class="panel">
+      <h3>Configuration</h3>
 
-        <label>Type</label>
-        <select>
-          <option>Thermocouple</option>
-          <option>RTD</option>
-        </select>
+      <label>Length (mm)</label>
+      <input type="number" value="300" id="lengthInput" />
 
-        <label>Subtype</label>
-        <select>
-          <option>K</option>
-          <option>J</option>
-          <option>N</option>
-          <option>R</option>
-          <option>S</option>
-        </select>
+      <label>Diameter (mm)</label>
+      <select id="diameterInput">
+        <option value="4">4</option>
+        <option value="6" selected>6</option>
+        <option value="8">8</option>
+      </select>
 
-        <label>Sheath</label>
-        <select>
-          <option>SS316</option>
-          <option>SS310</option>
-          <option>Inconel 600</option>
-          <option>Ceramic</option>
-        </select>
-
-        <label>Diameter</label>
-        <select>
-          <option>3mm</option>
-          <option>6mm</option>
-          <option>8mm</option>
-        </select>
-
-        <label>Length</label>
-        <input type="text" value="300mm" />
-
-        <label>Connection</label>
-        <select>
-          <option>Threaded</option>
-          <option>Flanged</option>
-          <option>Welded</option>
-        </select>
-
-        <label>Head</label>
-        <select>
-          <option>Weatherproof</option>
-          <option>Flameproof</option>
-          <option>Mini</option>
-        </select>
-
-        <label>Cable</label>
-        <select>
-          <option>PVC</option>
-          <option>PTFE</option>
-          <option>Fiberglass</option>
-        </select>
-      </div>
-
-      <!-- CENTER VIEWER -->
-      <div class="viewer">
-        <h3>Preview</h3>
-
-        <div class="model-box">
-          <p>Type: Thermocouple</p>
-          <p>Subtype: K</p>
-          <p>Material: SS316</p>
-          <p>Length: 300mm</p>
-        </div>
-      </div>
-
-      <!-- RIGHT PANEL -->
-      <div class="panel">
-        <h3>Output</h3>
-
-        <p><strong>Model Code:</strong></p>
-        <p class="code">TC-K-SS316-6mm-300mm-Threaded-WP-PVC</p>
-
-        <button>Download Datasheet</button>
-      </div>
-
+      <button onclick="updateModel()">Update Model</button>
     </div>
+
+    <!-- CENTER VIEWER -->
+    <div class="viewer">
+      <h3>3D Model</h3>
+      <div id="canvas-container"></div>
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <div class="panel">
+      <h3>Output</h3>
+      <p><strong>Model Code:</strong></p>
+      <p id="modelCode" class="code">TC-K-SS316</p>
+    </div>
+
   </div>
+</div>
+
+<!-- 3D SCRIPT -->
+<script>
+
+let scene, camera, renderer, sheath;
+
+// INIT
+function init() {
+  scene = new THREE.Scene();
+
+  camera = new THREE.PerspectiveCamera(75, 600/400, 0.1, 1000);
+  camera.position.z = 5;
+
+  renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setSize(600, 400);
+
+  document.getElementById("canvas-container").appendChild(renderer.domElement);
+
+  // LIGHT
+  const light = new THREE.PointLight(0xffffff, 1);
+  light.position.set(5, 5, 5);
+  scene.add(light);
+
+  createModel(300, 6);
+
+  animate();
+}
+
+// CREATE MODEL
+function createModel(lengthMM, diameterMM) {
+
+  if (sheath) {
+    scene.remove(sheath);
+  }
+
+  const length = lengthMM / 100;   // scale
+  const radius = diameterMM / 200;
+
+  const geometry = new THREE.CylinderGeometry(radius, radius, length, 32);
+  const material = new THREE.MeshStandardMaterial({ color: 0x888888 });
+
+  sheath = new THREE.Mesh(geometry, material);
+  scene.add(sheath);
+}
+
+// UPDATE MODEL FROM INPUT
+function updateModel() {
+  const length = document.getElementById("lengthInput").value;
+  const diameter = document.getElementById("diameterInput").value;
+
+  createModel(length, diameter);
+
+  document.getElementById("modelCode").innerText =
+    `TC-K-SS316-${diameter}mm-${length}mm`;
+}
+
+// ANIMATION LOOP
+function animate() {
+  requestAnimationFrame(animate);
+
+  if (sheath) {
+    sheath.rotation.y += 0.01;
+  }
+
+  renderer.render(scene, camera);
+}
+
+// START
+init();
+
+</script>
 
 </body>
 </html>
