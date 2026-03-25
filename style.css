@@ -31,7 +31,10 @@ h1 {
   border: 1px solid #ddd;
   border-radius: 6px;
 }
-
+#canvas-container {
+  width: 100%;
+  height: 400px;
+}
 /* Viewer */
 .viewer {
   width: 50%;
