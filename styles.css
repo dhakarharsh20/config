@@ -1,0 +1,30 @@
+body {
+  margin: 0;
+  font-family: sans-serif;
+  background: #0f1115;
+  color: white;
+}
+
+.app {
+  display: flex;
+  height: 100vh;
+}
+
+.viewer {
+  width: 70%;
+}
+
+.panel {
+  width: 30%;
+  padding: 20px;
+  background: #1a1d23;
+}
+
+.config, .datasheet {
+  margin-bottom: 20px;
+}
+
+input, select, button {
+  width: 100%;
+  margin-bottom: 10px;
+}
