@@ -2,300 +2,864 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tempsens | Thermocouple Configurator</title>
-<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Tempsens Pro Configurator — Thermocouple Assembly Builder</title>
+<meta name="description" content="Industrial thermocouple product configurator by Tempsens Instruments. Configure, visualize in 3D, and export datasheets.">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
 :root{
-  --bg:#0c0e12;--panel:#10131a;--card:#151921;--hover:#1b2030;
-  --b0:#1e2536;--b1:#28334a;
-  --blue:#2b7fff;--bdim:#1a4d9e;--bglow:rgba(43,127,255,.13);
-  --orange:#f07d24;--green:#28c96e;--red:#e03c3c;--yellow:#f0c040;
-  --t0:#eef1f8;--t1:#d0d8e8;--t2:#7a8499;--t3:#3e4a5e;--steel:#8fa3bf;
-  --mono:'IBM Plex Mono',monospace;
-  --head:'Rajdhani',sans-serif;
-  --tech:'Share Tech Mono',monospace;
+--bg:#0c0e12;--panel:#10131a;--card:#151921;--hover:#1b2030;
+--b0:#1e2536;--b1:#28334a;--blue:#2b7fff;--bdim:#1a4d9e;
+--bglow:rgba(43,127,255,0.13);--orange:#f07d24;--green:#28c96e;
+--red:#e03c3c;--yellow:#f0c040;--t0:#eef1f8;--t1:#d0d8e8;
+--t2:#7a8499;--t3:#3e4a5e;--steel:#8fa3bf;
+--head:'Rajdhani',sans-serif;--mono:'IBM Plex Mono',monospace;
+--tech:'Share Tech Mono',monospace;
 }
-*{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--t1);font-family:var(--head);font-size:14px;height:100vh;overflow:hidden;display:flex;flex-direction:column}
-
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100vh;overflow:hidden;background:var(--bg);color:var(--t1);font-family:var(--head);}
+body{display:flex;flex-direction:column;}
+::-webkit-scrollbar{width:5px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--b1);}
 /* TOP BAR */
-.topbar{height:44px;background:var(--panel);border-bottom:1px solid var(--b0);display:flex;align-items:center;padding:0 16px;gap:18px;flex-shrink:0}
-.logo{font-family:var(--head);font-weight:700;font-size:16px;letter-spacing:2px;color:var(--t0);display:flex;align-items:center;gap:8px}
-.logo b{color:var(--blue)}
-.badge{background:var(--blue);color:#fff;font-size:9px;padding:1px 6px;font-family:var(--mono);letter-spacing:1px}
-.sep{width:1px;height:22px;background:var(--b0)}
-.subtitle{font-family:var(--mono);font-size:10px;color:var(--t2);letter-spacing:1px}
-.topbar-right{margin-left:auto;display:flex;align-items:center;gap:8px}
-.tbtn{height:28px;padding:0 13px;background:var(--card);border:1px solid var(--b1);color:var(--t2);font-family:var(--head);font-size:12px;font-weight:600;letter-spacing:1px;cursor:pointer;display:flex;align-items:center;gap:5px;transition:all .15s;white-space:nowrap}
-.tbtn:hover{background:var(--hover);color:var(--t1);border-color:var(--blue)}
-.tbtn.pri{background:var(--blue);color:#fff;border-color:var(--blue)}
-.tbtn.pri:hover{background:#1a6ae8}
-.tbtn:disabled{opacity:.5;cursor:not-allowed}
-
-/* LAYOUT */
-.main{flex:1;display:grid;grid-template-columns:1fr 336px;overflow:hidden}
-
+#topbar{height:44px;background:var(--panel);border-bottom:1px solid var(--b0);display:flex;align-items:center;justify-content:space-between;padding:0 14px;flex-shrink:0;z-index:50;}
+.logo{display:flex;align-items:center;gap:8px;}
+.logo svg{width:22px;height:22px;}
+.logo-text{font-family:var(--head);font-weight:700;font-size:15px;color:var(--t0);letter-spacing:2px;}
+.logo-badge{background:var(--blue);color:#fff;font-size:9px;padding:2px 6px;font-weight:600;letter-spacing:1px;font-family:var(--head);}
+.subtitle{font-family:var(--mono);font-size:10px;color:var(--t2);letter-spacing:2px;text-transform:uppercase;}
+.top-btns{display:flex;gap:6px;}
+.tbtn{height:30px;padding:0 12px;background:var(--card);border:1px solid var(--b0);color:var(--t2);font-family:var(--head);font-size:11px;font-weight:600;letter-spacing:1px;cursor:pointer;display:flex;align-items:center;gap:5px;text-transform:uppercase;}
+.tbtn:hover{border-color:var(--blue);color:var(--t1);background:var(--hover);}
+.tbtn.primary{background:var(--blue);border-color:var(--blue);color:#fff;}
+.tbtn.primary:hover{background:#3a8fff;}
+/* MAIN */
+#main{flex:1;display:grid;grid-template-columns:1fr 336px;overflow:hidden;min-height:0;}
 /* VIEWPORT */
-.vp{position:relative;background:#07090d;overflow:hidden;border-right:1px solid var(--b0)}
-#c3d{display:block;width:100%;height:100%;cursor:crosshair}
-#c3d:active{cursor:grabbing}
-
-/* CAD corners */
-.corner{position:absolute;width:16px;height:16px;border-color:rgba(43,127,255,.35);border-style:solid;pointer-events:none;z-index:4}
-.corner.tl{top:8px;left:8px;border-width:1px 0 0 1px}
-.corner.tr{top:8px;right:8px;border-width:1px 1px 0 0}
-.corner.bl{bottom:8px;left:8px;border-width:0 0 1px 1px}
-.corner.br{bottom:8px;right:8px;border-width:0 1px 1px 0}
-
-/* Scanlines */
-.vp::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.02) 2px,rgba(0,0,0,.02) 4px);pointer-events:none;z-index:2}
-
-/* Viewport toolbar */
-.vtbar{position:absolute;top:12px;left:12px;display:flex;flex-direction:column;gap:4px;z-index:10}
-.vbtn{width:32px;height:32px;background:rgba(10,13,20,.9);border:1px solid var(--b1);color:var(--steel);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;font-family:var(--mono);transition:all .15s;backdrop-filter:blur(6px);user-select:none}
-.vbtn:hover,.vbtn.on{background:var(--bglow);border-color:var(--blue);color:var(--blue)}
-
-/* Viewport toggles */
-.vtogs{position:absolute;top:12px;right:12px;display:flex;flex-direction:column;gap:5px;z-index:10}
-.vtog{display:flex;align-items:center;gap:7px;background:rgba(10,13,20,.9);border:1px solid var(--b1);padding:5px 9px;cursor:pointer;backdrop-filter:blur(6px);transition:all .2s;user-select:none}
-.vtog:hover{border-color:var(--bdim)}
-.vtog.on{border-color:var(--blue);background:var(--bglow)}
-.vdot{width:8px;height:8px;border-radius:50%;background:var(--t3);transition:all .2s;flex-shrink:0}
-.vtog.on .vdot{background:var(--blue);box-shadow:0 0 6px var(--blue)}
-.vlbl{font-family:var(--mono);font-size:9px;color:var(--t2);letter-spacing:.8px}
-
-/* Part hover label */
-#partLabel{
-  position:absolute;background:rgba(8,10,16,.95);
-  border:1px solid var(--blue);border-left:3px solid var(--blue);
-  padding:5px 12px;font-family:var(--mono);font-size:10px;color:var(--steel);
-  pointer-events:none;z-index:20;opacity:0;transition:opacity .12s;
-  letter-spacing:.5px;white-space:nowrap;backdrop-filter:blur(4px);
-}
-
-/* Dimension canvas */
-#dimCv{position:absolute;inset:0;pointer-events:none;z-index:8}
-
-/* Loading spinner */
-#loader{
-  position:absolute;inset:0;background:#07090d;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:16px;z-index:100;
-}
-.spin{width:40px;height:40px;border:2px solid var(--b1);border-top-color:var(--blue);border-radius:50%;animation:spin .9s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-.load-txt{font-family:var(--mono);font-size:10px;color:var(--t2);letter-spacing:2px}
-
-/* Status / material badge */
-#matbadge{position:absolute;bottom:30px;left:12px;font-family:var(--mono);font-size:9px;color:var(--steel);background:rgba(8,10,16,.88);padding:3px 8px;border:1px solid var(--b0);z-index:5;letter-spacing:.8px}
-.vstat{position:absolute;bottom:10px;left:12px;right:12px;display:flex;justify-content:space-between;font-family:var(--mono);font-size:9px;color:var(--t3);letter-spacing:.8px;z-index:5;pointer-events:none}
-.vstl{display:flex;gap:14px}
-.vsi-k{color:var(--t3)}.vsi-v{color:var(--steel)}
-
+#viewport{position:relative;background:#07090d;overflow:hidden;cursor:crosshair;}
+#viewport canvas{display:block;width:100%;height:100%;}
+.scanline{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(255,255,255,0.02) 3px,rgba(255,255,255,0.02) 4px);z-index:5;}
+.cad-corner{position:absolute;width:18px;height:18px;pointer-events:none;z-index:6;}
+.cad-corner.tl{top:8px;left:8px;border-top:2px solid var(--b1);border-left:2px solid var(--b1);}
+.cad-corner.tr{top:8px;right:8px;border-top:2px solid var(--b1);border-right:2px solid var(--b1);}
+.cad-corner.bl{bottom:8px;left:8px;border-bottom:2px solid var(--b1);border-left:2px solid var(--b1);}
+.cad-corner.br{bottom:8px;right:8px;border-bottom:2px solid var(--b1);border-right:2px solid var(--b1);}
+/* LOADER */
+#loader{position:absolute;inset:0;z-index:100;background:#07090d;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;}
+.spin{width:36px;height:36px;border:2px solid var(--b1);border-top-color:var(--blue);border-radius:50%;animation:sp 0.8s linear infinite;}
+@keyframes sp{to{transform:rotate(360deg)}}
+#loader span{font-family:var(--mono);font-size:10px;color:var(--t2);letter-spacing:3px;}
+/* VIEWPORT TOOLBAR */
+.vtbar{position:absolute;top:10px;left:10px;display:flex;flex-direction:column;gap:4px;z-index:10;pointer-events:auto;}
+.vbtn{width:32px;height:32px;background:rgba(16,19,26,0.8);backdrop-filter:blur(6px);border:1px solid var(--b1);color:var(--t2);font-family:var(--head);font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.vbtn:hover{border-color:var(--blue);color:var(--blue);box-shadow:0 0 8px var(--bglow);}
+/* VIEWPORT TOGGLES */
+.vtogsbar{position:absolute;top:10px;right:10px;display:flex;flex-direction:column;gap:4px;z-index:10;}
+.vtog{display:flex;align-items:center;gap:6px;padding:3px 10px 3px 8px;background:rgba(16,19,26,0.8);backdrop-filter:blur(6px);border:1px solid var(--b0);cursor:pointer;user-select:none;}
+.vtog .dot{width:6px;height:6px;background:var(--t3);flex-shrink:0;}
+.vtog .vlbl{font-family:var(--mono);font-size:9px;color:var(--t2);letter-spacing:1px;text-transform:uppercase;}
+.vtog.on{border-color:var(--blue);background:var(--bglow);}
+.vtog.on .dot{background:var(--blue);box-shadow:0 0 5px var(--blue);}
+.vtog.on .vlbl{color:var(--t1);}
+/* PART LABEL */
+#partLabel{position:absolute;z-index:15;pointer-events:none;background:rgba(12,14,18,0.92);border-left:3px solid var(--blue);padding:5px 10px;font-family:var(--mono);font-size:10px;color:var(--t1);opacity:0;transition:opacity 0.15s;white-space:nowrap;}
+/* MATERIAL BADGE */
+#matbadge{position:absolute;bottom:36px;left:10px;pointer-events:none;z-index:10;font-family:var(--mono);font-size:9px;color:var(--steel);letter-spacing:1px;background:rgba(12,14,18,0.85);padding:3px 10px;border:1px solid var(--b0);}
+/* STATUS BAR */
+#statusbar{position:absolute;bottom:0;left:0;right:0;height:24px;background:rgba(12,14,18,0.9);border-top:1px solid var(--b0);display:flex;align-items:center;justify-content:space-between;padding:0 10px;pointer-events:none;z-index:10;}
+#statusbar span{font-family:var(--mono);font-size:9px;color:var(--t3);letter-spacing:1px;}
+.stval{color:var(--t2)!important;}
+/* DIM CANVAS */
+#dimCv{position:absolute;inset:0;z-index:8;pointer-events:none;}
 /* CONFIG PANEL */
-.cfg{background:var(--panel);display:flex;flex-direction:column;overflow:hidden}
-.cfghdr{padding:10px 16px;border-bottom:1px solid var(--b0);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
-.cfgtitle{font-family:var(--head);font-weight:700;font-size:13px;letter-spacing:2px;color:var(--t0)}
-.stepctr{font-family:var(--mono);font-size:10px;color:var(--blue);background:var(--bglow);padding:3px 8px;border:1px solid var(--bdim)}
-.spnav{padding:8px 16px;display:flex;flex-wrap:wrap;gap:4px;border-bottom:1px solid var(--b0);flex-shrink:0}
-.spill{width:28px;height:22px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;background:var(--card);border:1px solid var(--b0);color:var(--t3);cursor:pointer;transition:all .15s}
-.spill:hover{border-color:var(--bdim);color:var(--steel)}
-.spill.active{background:var(--blue);border-color:var(--blue);color:#fff}
-.spill.done{border-color:var(--green);color:var(--green);background:rgba(40,201,110,.07)}
-.steps{flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--b0) transparent}
-.steps::-webkit-scrollbar{width:3px}
-.steps::-webkit-scrollbar-thumb{background:var(--b1)}
-.sb{padding:14px 16px;border-bottom:1px solid var(--b0);display:none}
-.sb.active{display:block}
-.stitle{font-family:var(--head);font-weight:700;font-size:15px;letter-spacing:1px;color:var(--t0);margin-bottom:3px;display:flex;align-items:center;gap:8px}
-.snum{font-family:var(--mono);font-size:10px;color:var(--blue);background:var(--bglow);padding:1px 6px;border:1px solid var(--bdim)}
-.sdesc{font-family:var(--mono);font-size:10px;color:var(--t3);margin-bottom:12px;line-height:1.65}
-.fld{margin-bottom:10px}
-.flbl{font-family:var(--mono);font-size:10px;color:var(--t2);letter-spacing:.8px;margin-bottom:5px;display:flex;justify-content:space-between}
-.flbl span{color:var(--blue)}
-select{width:100%;background:var(--card);border:1px solid var(--b1);color:var(--t1);font-family:var(--mono);font-size:11px;padding:7px 28px 7px 10px;outline:none;appearance:none;cursor:pointer;transition:border .15s;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%237a8499'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
-select:hover,select:focus{border-color:var(--blue)}
-select option{background:var(--card)}
-input[type=range]{width:100%;height:3px;background:var(--b1);border:none;cursor:pointer;outline:none;accent-color:var(--blue);display:block;margin-top:4px}
-.rgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-.rc{background:var(--card);border:1px solid var(--b0);padding:8px 10px;cursor:pointer;transition:all .15s;display:flex;flex-direction:column;gap:2px}
-.rc:hover{border-color:var(--bdim);background:var(--hover)}
-.rc.sel{border-color:var(--blue);background:var(--bglow)}
-.rcdot{width:6px;height:6px;border-radius:50%;border:1px solid var(--b1);margin-bottom:3px;transition:all .15s}
-.rc.sel .rcdot{background:var(--blue);border-color:var(--blue);box-shadow:0 0 5px var(--blue)}
-.rclbl{font-family:var(--head);font-weight:600;font-size:12px;color:var(--t1);letter-spacing:.4px}
-.rcsub{font-family:var(--mono);font-size:9px;color:var(--t3)}
-.vbox{margin-top:8px;padding:7px 10px;border-left:3px solid;font-family:var(--mono);font-size:10px;line-height:1.5;display:none}
-.vbox.err{border-color:var(--red);background:rgba(224,60,60,.07);color:var(--red);display:block}
-.vbox.warn{border-color:var(--yellow);background:rgba(240,192,64,.07);color:var(--yellow);display:block}
-.vbox.info{border-color:var(--blue);background:var(--bglow);color:var(--steel);display:block}
-.snbtns{display:flex;gap:8px;margin-top:14px}
-.snbtns button{flex:1;height:32px;background:var(--card);border:1px solid var(--b1);color:var(--t2);font-family:var(--head);font-weight:600;font-size:12px;letter-spacing:1px;cursor:pointer;transition:all .15s}
-.snbtns button:hover{border-color:var(--blue);color:var(--t1)}
-.snbtns .nb{background:var(--blue);border-color:var(--blue);color:#fff}
-.snbtns .nb:hover{background:#1a6ae8}
-.snbtns .gb{background:var(--green);border-color:var(--green);color:#fff}
-
-/* DATASHEET */
-.ds{height:148px;background:#090a0e;border-top:1px solid var(--b0);display:grid;grid-template-columns:1fr 336px;flex-shrink:0}
-.dsl{padding:10px 16px;border-right:1px solid var(--b0);overflow:hidden}
-.dshdr{font-family:var(--mono);font-size:9px;color:var(--t3);letter-spacing:2px;margin-bottom:8px;display:flex;align-items:center;gap:8px}
-.dshdr::after{content:'';flex:1;height:1px;background:var(--b0)}
-.dsgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
-.dslbl{font-family:var(--mono);font-size:9px;color:var(--t3);margin-bottom:2px}
-.dsval{font-family:var(--tech);font-size:14px;color:var(--blue)}
-.dsunit{font-family:var(--mono);font-size:8px;color:var(--t3)}
-.dsr{padding:10px 16px}
-.dscode{font-family:var(--tech);font-size:11px;color:var(--orange);letter-spacing:.8px;margin-bottom:4px;word-break:break-all}
-.dspn{font-family:var(--mono);font-size:10px;color:var(--t3);margin-bottom:8px}
-.dstags{display:flex;flex-wrap:wrap;gap:4px}
-.dtag{font-family:var(--mono);font-size:9px;padding:2px 6px;border:1px solid var(--b1);color:var(--t3)}
-.dtag.hi{border-color:var(--bdim);color:var(--blue)}
-
-/* GLB upload zone */
-.glb-zone{
-  margin-bottom:12px;
-  border:1px dashed var(--b1);
-  padding:12px;
-  text-align:center;
-  cursor:pointer;
-  transition:all .2s;
-  position:relative;
-}
-.glb-zone:hover,.glb-zone.drag{border-color:var(--blue);background:var(--bglow)}
-.glb-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
-.glb-zone-icon{font-size:20px;margin-bottom:4px}
-.glb-zone-title{font-family:var(--head);font-weight:600;font-size:12px;color:var(--t2);letter-spacing:1px}
-.glb-zone-sub{font-family:var(--mono);font-size:9px;color:var(--t3);margin-top:2px}
-.glb-status{
-  display:none;margin-bottom:10px;padding:7px 10px;
-  border-left:3px solid var(--green);background:rgba(40,201,110,.07);
-  font-family:var(--mono);font-size:10px;color:var(--green);
-}
+#cfgpanel{background:var(--panel);border-left:1px solid var(--b0);display:flex;flex-direction:column;overflow:hidden;}
+.cfg-head{padding:10px 14px;border-bottom:1px solid var(--b0);display:flex;align-items:center;justify-content:space-between;}
+.cfg-head h2{font-family:var(--head);font-size:14px;font-weight:700;color:var(--t0);letter-spacing:2px;text-transform:uppercase;}
+.step-badge{font-family:var(--mono);font-size:10px;color:var(--blue);background:var(--bglow);padding:2px 8px;border:1px solid var(--bdim);}
+/* STEP PILLS */
+.spills{display:flex;gap:3px;padding:8px 14px;border-bottom:1px solid var(--b0);}
+.sp{width:28px;height:22px;background:var(--card);border:1px solid var(--b0);color:var(--t3);font-family:var(--mono);font-size:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:500;}
+.sp.active{background:var(--blue);border-color:var(--blue);color:#fff;}
+.sp.done{border-color:var(--green);color:var(--green);background:rgba(40,201,110,0.08);}
+/* STEPS CONTAINER */
+.steps{flex:1;overflow-y:auto;padding:10px 14px;}
+.sb{display:none;}
+.sb.active{display:block;}
+.sb-num{font-family:var(--mono);font-size:9px;color:var(--blue);letter-spacing:1px;margin-bottom:2px;}
+.sb h3{font-family:var(--head);font-size:14px;font-weight:700;color:var(--t0);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;}
+.sb .sdesc{font-family:var(--mono);font-size:10px;color:var(--t2);margin-bottom:10px;line-height:1.5;}
+/* RADIO CARDS */
+.rcgrid{display:grid;gap:5px;}
+.rcgrid.c2{grid-template-columns:1fr 1fr;}
+.rcgrid.c3{grid-template-columns:1fr 1fr 1fr;}
+.rc{background:var(--card);border:1px solid var(--b0);padding:8px 10px;cursor:pointer;position:relative;}
+.rc:hover{border-color:var(--b1);background:var(--hover);}
+.rc.sel{border-color:var(--blue);background:var(--bglow);}
+.rcdot{width:6px;height:6px;background:var(--t3);position:absolute;top:8px;right:8px;}
+.rc.sel .rcdot{background:var(--blue);box-shadow:0 0 5px var(--blue);}
+.rc-label{font-family:var(--head);font-size:12px;font-weight:600;color:var(--t0);letter-spacing:1px;}
+.rc-sub{font-family:var(--mono);font-size:9px;color:var(--t2);margin-top:2px;line-height:1.4;}
+.rc-sub2{font-family:var(--mono);font-size:9px;color:var(--t3);}
+/* FORM CONTROLS */
+.fg{margin-bottom:10px;}
+.fg label{display:block;font-family:var(--head);font-size:10px;font-weight:600;color:var(--t2);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;}
+.fg select,.fg input[type=text]{width:100%;height:30px;background:var(--card);border:1px solid var(--b1);color:var(--t1);font-family:var(--mono);font-size:11px;padding:0 8px;outline:none;-webkit-appearance:none;appearance:none;}
+.fg select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%237a8499'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;padding-right:24px;}
+.fg select:hover,.fg select:focus,.fg input:hover,.fg input:focus{border-color:var(--blue);}
+.fg select option{background:var(--card);color:var(--t1);}
+/* RANGE */
+.rg{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.rg input[type=range]{flex:1;height:3px;accent-color:var(--blue);background:var(--b1);-webkit-appearance:none;appearance:none;outline:none;}
+.rg input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;background:var(--blue);border:none;cursor:pointer;}
+.rg .rv{font-family:var(--tech);font-size:12px;color:var(--blue);min-width:42px;text-align:right;}
+/* VALIDATION BOX */
+.vbox{display:none;font-family:var(--mono);font-size:10px;line-height:1.5;padding:6px 10px;margin:8px 0;border-left:3px solid var(--b1);}
+.vbox.err{display:block;border-color:var(--red);color:var(--red);background:rgba(224,60,60,0.06);}
+.vbox.warn{display:block;border-color:var(--yellow);color:var(--yellow);background:rgba(240,192,64,0.06);}
+.vbox.info{display:block;border-color:var(--blue);color:var(--steel);background:var(--bglow);}
+.vbox.ok{display:block;border-color:var(--green);color:var(--green);background:rgba(40,201,110,0.06);}
+/* NAV BUTTONS */
+.navbtns{display:flex;gap:6px;margin-top:12px;}
+.navbtns button{flex:1;height:32px;border:1px solid var(--b0);font-family:var(--head);font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;cursor:pointer;}
+.bb{background:var(--card);color:var(--t2);}
+.bb:hover{background:var(--hover);border-color:var(--b1);color:var(--t1);}
+.nb{background:var(--blue);border-color:var(--blue);color:#fff;}
+.nb:hover{background:#3a8fff;}
+.gb{background:var(--green);border-color:var(--green);color:#fff;}
+.gb:hover{background:#33d47a;}
+/* GLB UPLOAD */
+.glbzone{border:2px dashed var(--b1);padding:18px;text-align:center;margin-top:10px;cursor:pointer;transition:border-color 0.2s,background 0.2s;}
+.glbzone:hover,.glbzone.drag{border-color:var(--blue);background:var(--bglow);}
+.glbzone .gz-icon{font-size:22px;color:var(--t3);margin-bottom:4px;}
+.glbzone .gz-title{font-family:var(--head);font-size:10px;font-weight:600;color:var(--t2);letter-spacing:1px;text-transform:uppercase;}
+.glbzone .gz-sub{font-family:var(--mono);font-size:9px;color:var(--t3);margin-top:2px;}
+.glb-ok{display:none;font-family:var(--mono);font-size:10px;color:var(--green);margin-top:6px;}
+/* BOTTOM DATASHEET */
+#datasheet{height:148px;background:var(--panel);border-top:1px solid var(--b0);display:grid;grid-template-columns:1fr 1fr;padding:10px 14px;gap:10px;flex-shrink:0;overflow:hidden;}
+.ds-left{display:grid;grid-template-columns:repeat(5,1fr);grid-template-rows:1fr 1fr;gap:4px;}
+.dsc{background:var(--card);border:1px solid var(--b0);padding:5px 8px;display:flex;flex-direction:column;justify-content:center;}
+.dsc .dl{font-family:var(--head);font-size:8px;font-weight:600;color:var(--t3);letter-spacing:1px;text-transform:uppercase;}
+.dsc .dv{font-family:var(--tech);font-size:13px;color:var(--t0);margin-top:1px;}
+.dsc .du{font-family:var(--mono);font-size:8px;color:var(--t2);}
+.ds-right{display:flex;flex-direction:column;justify-content:center;gap:4px;}
+#dscode{font-family:var(--tech);font-size:11px;color:var(--orange);letter-spacing:1px;word-break:break-all;}
+#dspart{font-family:var(--mono);font-size:10px;color:var(--t3);}
+#dspart.final{color:var(--green);}
+.dstags{display:flex;flex-wrap:wrap;gap:3px;margin-top:4px;}
+.dtag{font-family:var(--mono);font-size:8px;padding:1px 6px;border:1px solid var(--b0);color:var(--t2);}
+.dtag.hi{border-color:var(--blue);color:var(--blue);background:var(--bglow);}
 </style>
 </head>
 <body>
-
 <!-- TOP BAR -->
-<div class="topbar">
+<div id="topbar">
   <div class="logo">
-    <svg width="18" height="18" viewBox="0 0 18 18">
-      <rect x="1" y="1" width="16" height="16" rx="1" stroke="#2b7fff" stroke-width="1.5" fill="none"/>
-      <line x1="9" y1="1" x2="9" y2="17" stroke="#2b7fff" stroke-width="1"/>
-      <circle cx="9" cy="9" r="2.5" fill="#2b7fff"/>
-    </svg>
-    TEMPSENS <b>PRO</b>
-    <div class="badge">CONFIGURATOR</div>
+    <svg viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><polygon points="12,2 22,8.5 22,15.5 12,22 2,15.5 2,8.5"/><line x1="12" y1="2" x2="12" y2="22"/><line x1="2" y1="8.5" x2="22" y2="8.5"/></svg>
+    <span class="logo-text">TEMPSENS PRO</span>
+    <span class="logo-badge">CONFIGURATOR</span>
   </div>
-  <div class="sep"></div>
-  <div class="subtitle">THERMOCOUPLE ASSEMBLY BUILDER v2.1</div>
-  <div class="topbar-right">
+  <span class="subtitle">THERMOCOUPLE ASSEMBLY BUILDER v2.1</span>
+  <div class="top-btns">
     <button class="tbtn" onclick="resetAll()">↺ RESET</button>
     <button class="tbtn" onclick="saveConfig()">⬡ SAVE JSON</button>
-    <button class="tbtn pri" id="pdfBtn" onclick="exportPDF()">↓ PDF DATASHEET</button>
+    <button class="tbtn primary" onclick="exportPDF()">↓ PDF DATASHEET</button>
   </div>
 </div>
-
 <!-- MAIN -->
-<div class="main">
-
+<div id="main">
   <!-- VIEWPORT -->
-  <div class="vp" id="vp">
-    <canvas id="c3d"></canvas>
-
-    <!-- Loader -->
-    <div id="loader">
-      <div class="spin"></div>
-      <div class="load-txt" id="loadTxt">INITIALISING...</div>
-    </div>
-
-    <!-- CAD corners -->
-    <div class="corner tl"></div><div class="corner tr"></div>
-    <div class="corner bl"></div><div class="corner br"></div>
-
-    <!-- Left toolbar -->
-    <div class="vtbar">
-      <div class="vbtn" title="Fit View"   onclick="fitView()">⊕</div>
-      <div class="vbtn" title="Front View" onclick="setView('front')">F</div>
-      <div class="vbtn" title="Side View"  onclick="setView('side')">S</div>
-      <div class="vbtn" title="Top View"   onclick="setView('top')">T</div>
-      <div class="vbtn" title="ISO View"   onclick="setView('iso')">◈</div>
-    </div>
-
-    <!-- Right toggles -->
-    <div class="vtogs">
-      <div class="vtog" id="tog-wire"  onclick="toggleWire()"> <div class="vdot"></div><div class="vlbl">WIREFRAME</div></div>
-      <div class="vtog on" id="tog-dims"  onclick="toggleDims()"> <div class="vdot"></div><div class="vlbl">DIMENSIONS</div></div>
-      <div class="vtog on" id="tog-grid"  onclick="toggleGrid()"> <div class="vdot"></div><div class="vlbl">GRID FLOOR</div></div>
-      <div class="vtog on" id="tog-parts" onclick="toggleLabels()"><div class="vdot"></div><div class="vlbl">PART LABELS</div></div>
-    </div>
-
-    <!-- Part hover label -->
-    <div id="partLabel"></div>
-
-    <!-- Dim overlay -->
+  <div id="viewport">
+    <div id="loader"><div class="spin"></div><span>INITIALISING...</span></div>
+    <div class="scanline"></div>
+    <div class="cad-corner tl"></div><div class="cad-corner tr"></div>
+    <div class="cad-corner bl"></div><div class="cad-corner br"></div>
     <canvas id="dimCv"></canvas>
-
-    <!-- Material badge -->
-    <div id="matbadge">MAT: 316 SS  |  FINISH: 2B  |  IP: 65</div>
-
-    <!-- Status bar -->
-    <div class="vstat">
-      <div class="vstl">
-        <span><span class="vsi-k">ROT </span><span class="vsi-v" id="sRot">0°</span></span>
-        <span><span class="vsi-k">ZOOM </span><span class="vsi-v" id="sZoom">1.0×</span></span>
-        <span><span class="vsi-k">VERTS </span><span class="vsi-v" id="sVerts">—</span></span>
-      </div>
-      <span style="font-family:var(--mono);font-size:9px;color:var(--t3)">DRAG ROTATE · SCROLL ZOOM · HOVER PART</span>
+    <div id="partLabel"></div>
+    <div class="vtbar">
+      <button class="vbtn" title="Fit View" onclick="fitView()">⊕</button>
+      <button class="vbtn" title="Front View" onclick="setView(0,1.3,3.5)">F</button>
+      <button class="vbtn" title="Side View" onclick="setView(Math.PI/2,1.3,3.5)">S</button>
+      <button class="vbtn" title="Top View" onclick="setView(0,0.12,4.5)">T</button>
+      <button class="vbtn" title="ISO View" onclick="setView(0.55,1.1,4.0)">◈</button>
+    </div>
+    <div class="vtogsbar">
+      <div class="vtog" onclick="togWire(this)"><div class="dot"></div><span class="vlbl">WIREFRAME</span></div>
+      <div class="vtog on" onclick="togDims(this)"><div class="dot"></div><span class="vlbl">DIMENSIONS</span></div>
+      <div class="vtog on" onclick="togGrid(this)"><div class="dot"></div><span class="vlbl">GRID FLOOR</span></div>
+      <div class="vtog on" onclick="togLabels(this)"><div class="dot"></div><span class="vlbl">PART LABELS</span></div>
+    </div>
+    <div id="matbadge">MAT: SS316 | HEAD: TYPE-A | IP: IP65</div>
+    <div id="statusbar">
+      <span>ROT <span class="stval" id="sRot">29</span>° &nbsp; ZOOM <span class="stval" id="sZoom">1.0</span>× &nbsp; VERTS <span class="stval" id="sVerts">0</span></span>
+      <span>DRAG ROTATE · SCROLL ZOOM · HOVER PART</span>
     </div>
   </div>
-
   <!-- CONFIG PANEL -->
-  <div class="cfg">
-    <div class="cfghdr">
-      <div class="cfgtitle">CONFIGURATION</div>
-      <div class="stepctr" id="stepctr">STEP 1 / 8</div>
-    </div>
-    <div class="spnav" id="spnav"></div>
-    <div class="steps" id="stepsWrap"></div>
-  </div>
-</div>
-
-<!-- DATASHEET BAR -->
-<div class="ds">
-  <div class="dsl">
-    <div class="dshdr">LIVE SPECIFICATION SUMMARY</div>
-    <div class="dsgrid">
-      <div><div class="dslbl">TYPE</div>    <div class="dsval" id="ds-type">K</div></div>
-      <div><div class="dslbl">MAX TEMP</div><div class="dsval" id="ds-temp">1260</div><div class="dsunit">°C</div></div>
-      <div><div class="dslbl">SHEATH</div>  <div class="dsval" id="ds-sh">SS316</div></div>
-      <div><div class="dslbl">INSERTION</div><div class="dsval" id="ds-ins">150</div><div class="dsunit">mm</div></div>
-      <div><div class="dslbl">DIA</div>     <div class="dsval" id="ds-dia">6</div><div class="dsunit">mm</div></div>
-      <div><div class="dslbl">ACCURACY</div><div class="dsval" id="ds-acc">±2.5°C</div></div>
-      <div><div class="dslbl">RESPONSE</div><div class="dsval" id="ds-resp">0.3</div><div class="dsunit">s</div></div>
-      <div><div class="dslbl">CONN.</div>   <div class="dsval" id="ds-conn">½NPT</div></div>
-      <div><div class="dslbl">IP CLASS</div><div class="dsval" id="ds-ip">IP65</div></div>
-      <div><div class="dslbl">STD</div>     <div class="dsval">IEC584</div></div>
-    </div>
-  </div>
-  <div class="dsr">
-    <div class="dscode" id="dscode">TSE-K-SS316-6D-150IL-½NPT-A-2M</div>
-    <div class="dspn">P/N: <span id="dspn" style="color:var(--t3)">— PENDING COMPLETION —</span></div>
-    <div class="dstags">
-      <div class="dtag hi">TYPE K</div><div class="dtag hi">SS 316</div>
-      <div class="dtag">IP65</div><div class="dtag">IEC 584</div>
-      <div class="dtag">½ NPT</div><div class="dtag">GROUNDED</div>
+  <div id="cfgpanel">
+    <div class="cfg-head"><h2>Configuration</h2><span class="step-badge" id="stepBadge">STEP 1 / 8</span></div>
+    <div class="spills" id="pills"></div>
+    <div class="steps" id="stepsBox">
+      <!-- Steps injected by JS -->
     </div>
   </div>
 </div>
-
+<!-- BOTTOM DATASHEET -->
+<div id="datasheet">
+  <div class="ds-left">
+    <div class="dsc"><span class="dl">TYPE</span><span class="dv" id="ds-type">K</span></div>
+    <div class="dsc"><span class="dl">MAX TEMP</span><span class="dv" id="ds-mt">1260</span><span class="du">°C</span></div>
+    <div class="dsc"><span class="dl">SHEATH</span><span class="dv" id="ds-sh">SS316</span></div>
+    <div class="dsc"><span class="dl">INSERTION</span><span class="dv" id="ds-ins">150</span><span class="du">mm</span></div>
+    <div class="dsc"><span class="dl">DIA</span><span class="dv" id="ds-dia">6</span><span class="du">mm</span></div>
+    <div class="dsc"><span class="dl">ACCURACY</span><span class="dv" id="ds-acc">±2.5°C</span></div>
+    <div class="dsc"><span class="dl">RESPONSE</span><span class="dv" id="ds-resp">0.3</span><span class="du">s</span></div>
+    <div class="dsc"><span class="dl">CONN.</span><span class="dv" id="ds-conn">½" NPT</span></div>
+    <div class="dsc"><span class="dl">IP CLASS</span><span class="dv" id="ds-ip">IP65</span></div>
+    <div class="dsc"><span class="dl">STD</span><span class="dv">IEC584</span></div>
+  </div>
+  <div class="ds-right">
+    <div id="dscode">TSE-K-SS316-6D-150IL-½NPT-A-2M</div>
+    <div id="dspart">PART# —</div>
+    <div class="dstags" id="dstags"></div>
+  </div>
+</div>
 <script>
-// ═══════════════════════════════════════════════════════
-//  EMBEDDED GEOMETRY — pre-parsed from thermocouple.glb
-//  5 parts: probe | fitting | neck | collar | head
-// ═══════════════════════════════════════════════════════
-const PARTS_GEO = {
-  probe:   { pos: "vLhOPR4ZnL5gKMO8JCdkPR4ZnL6AS5i8JCdkPezGnr6AS5i8ANdYPOYiHr9oR528oEuTPAbEHL9gKMO8kEeYPAbEHL8YJce8bCpgPep7fr+AS5i8JCdkPep7fr9QVYy8JDlOPeS6f7+AS5i8JDlOPcraf78gw3q8tMo4Pcraf7/gSZq8tMo4PTlTf79gKMO8rNwiPfKqf79gKMO8eADvPPiif79gKMO8rO4MPeuyf79gKMO8rNwiPcraf78oRKG8rNwiPVIFgL/w3li8tMo4PbD6f7+wBAI8tMo4PVIFgL/AKzE7JDlOPdHSf7+wBAI8tMo4PU4JgL+AtC27JDlOPfKqf7/AvFk8JCdkPSZrf7+wBAI8JCdkPeS6f7/AKzE7JCdkPdfKf7+AtC27JCdkPdfKf78wJQO8JCdkPSxjf7/w3li8nCBsPep7fr/w3li8ZKhiPQMlfb+AS5i8jLlNPQMlfb9gKMO8JDlOPep7fr9ILb28tMo4Pep7fr+oGdW8rNwiPep7fr84DuO8rO4MPep7fr9QCem8rO4MPSPGe7/IAvG8rO4MPQMlfb+YA/C8eADvPAMlfb8IBu28eADvPOp7fr+YDOW8aCTDPDlTf79gKMO8aCTDPOp7fr84F9i86EWaPOp7fr9gKMO8kEeYPPiif7+AS5i8aCTDPNfKf7+AS5i8eADvPFUBgL/w3li8eADvPEsNgL8wJQO8rNwiPUsNgL8wJQO8eADvPEsNgL/AKzE7rNwiPVIFgL+wBAI8rNwiPcraf7/gpXU8tMo4PdHSf7/AvFk8tMo4Pep7fr+gp688tMo4PSZrf79Au5c8JDlOPep7fr9wupg8/CdjPep7fr/AvFk87KVlPQMlfb/AvFk8/B5uPep7fr+wBAI8rJl0Pep7fr/AKzE7pBd3PQMlfb/AKzE7dBh2Pep7fr+AtC27fJpzPep7fr8wJQO8dBh2PQMlfb8wJQO8lJ5uPQMlfb/w3li8JCdkPe1Fcr+YT5O8lJ5uPbT7dL/w3li8ZKhiPXuxd7+AS5i8jLlNPVwQeb9gKMO8tMo4PQMlfb/wE9y8rNwiPQMlfb+wB+u8rNwiPbT7dL+wB+u8rO4MPZRadr/IAvG8eADvPJRadr8IBu28aCTDPAMlfb+oEOC8oEuTPHuxd79gKMO8kEeYPFwQeb8YJce8eEySPAMlfb9gKMO8ANdYPAMlfb9ASJy8wNNcPOp7fr+AS5i8ANdYPCZrf7/w3li8ANdYPOS6f78wJQO8kEeYPNHSf7/w3li8aCTDPE4JgL+AtC27aCTDPLD6f7+wBAI8rO4MPcraf784zYE8rO4MPeS6f79Au5c8rNwiPfKqf79Au5c8rNwiPep7fr9gm748rNwiPQMlfb+olcU8tMo4PQMlfb8Yobc8JDlOPQMlfb9Ytp08RLZRPZRadr9Au5c8JCdkPe1Fcr/gt188RLZRPc2kc79Au5c87KVlPbT7dL/AvFk87KVlPSPGe7/AvFk8hBxxPQMlfb+wBAI8DJh2PbT7dL/AKzE7ZJZ4PQMlfb+AtC273Jh1PXuxd78wJQO83Jh1PSaQb78wJQO8lJ5uPSaQb7/w3li8JCdkPV7abL+YT5O8ZKhiPZckar+AS5i8ZKhiPQzncL+AS5i8jLlNPXuxd79gKMO8tMo4PVwQeb8gE928rNwiPQzncL+wB+u8rO4MPc2kc7+YA/C8eADvPM2kc78IBu28aCTDPHuxd7+oEOC8kEeYPAzncL8YJce8oEuTPO1Fcr9gKMO8ANdYPF7abL9ASJy88NtSPCaQb7+AS5i8ANdYPO1Fcr9ASJy8ANdYPHuxd79ASJy88NtSPFwQeb+AS5i8IAMjPAMlfb/w3li8sPcwPOp7fr/w3li8kA4VPOp7fr8wJQO8ANdYPNfKf7+AtC27ANdYPN7Cf7/AKzE7kEeYPMraf7+Q6iE8mCy5PMraf7/AvFk8eADvPPKqf79Au5c8eADvPOp7fr9gm748fO8LPep7fr9Il8M8rO4MPQMlfb9gksk8rNwiPVwQeb94lsQ8DNskPe1Fcr9Il8M8tMo4PZRadr8Yobc8JDlOPc2kc79Ytp08JDlOPUUxbr8ot5w8VCZlPSaQb7/AvFk89JxwPSaQb7+wBAI8DJh2PUUxbr/AKzE7zBZ4PQzncL+AtC27dBh2PZckar8wJQO8LB5vPe8PZr/w3li8JCdkPQ+xZL+YT5O8ZKhiPe8PZr+AS5i8JDlOPdZmZ78wKcK8JDlOPV7abL8AKsG8JDlOPSaQb78AKsG89DlNPSaQb79gKMO8tMo4Pe1Fcr/wE9y8rNwiPbfFaL+wB+u8rO4MPe8PZr+YA/C8rO4MPbfFaL+YA/C8rO4MPZckar+YA/C8eADvPEUxbr/gBuy8aCTDPAzncL+AEd+8kEeYPF7abL8YJce8ANdYPNZmZ79ASJy88NtSPLfFaL+AS5i80AQhPNZmZ7/w3li80AQhPCaQb7/w3li8ABoHPCaQb78wJQO8ABoHPLT7dL8wJQO8wBYLPAMlfb8wJQO88B4BPEJner+AtC27UB0DPAMlfb+AtC27IBUNPOp7fr+AtC27kA4VPOp7fr/AKzE7UPkuPOp7fr+wBAI8ANdYPBl7f7+wBAI8kEeYPOS6f7/AvFk8aCTDPCZrf79Au5c8aCTDPOp7fr+gp688aCTDPAMlfb8Yobc8eADvPAMlfb+olcU8eADvPLT7dL94lsQ8rO4MPbT7dL84k8g8rNwiPUUxbr94lsQ8tMo4PSaQb7/oobY8rDZRPbfFaL9Au5c8VCZlPbfFaL/AvFk8JCdkPWGkYL/gt188rDZRPUj7Yb9Au5c8VCZlPQ+xZL/AvFk89JxwPX57a7+wBAI8pBd3PZckar/AKzE7ZJZ4PZckar+AtC27dBh2PShaY78w
+const S={step:1,type:'K',sheath:'SS316',dia:6,ins:150,overall:280,junction:'grounded',head:'A',cable:'comp',cableShield:'unshielded',cableLen:2.0,mount:'fixed',conn:'npt',threadSize:'1/2',wireframe:false,dims:true,grid:true,labels:true};
+const TD={K:{mt:1260,acc:'±2.5°C',resp:0.3},J:{mt:750,acc:'±2.5°C',resp:0.3},T:{mt:350,acc:'±1.0°C',resp:0.2},N:{mt:1300,acc:'±2.5°C',resp:0.4},R:{mt:1480,acc:'±1.5°C',resp:0.8},S:{mt:1480,acc:'±1.5°C',resp:0.8}};
+const TYPE_EMISSIVE={K:0x001122,J:0x110800,T:0x001108,N:0x080012,R:0x110000,S:0x110800};
+const SHEATH_MAT={SS316:{col:0x7a9ab8,rough:0.34},SS310:{col:0x8aacba,rough:0.37},INC600:{col:0x9a8e78,rough:0.43},HAST:{col:0x7a8870,rough:0.46}};
+const HEAD_MAT={none:{col:0x252830,rough:0.75,ip:'IP00'},A:{col:0x607888,rough:0.52,ip:'IP65'},B:{col:0x4a5a66,rough:0.65,ip:'IP67'},C:{col:0x3a4850,rough:0.72,ip:'Ex d IIB'},D:{col:0x586878,rough:0.55,ip:'IP54'},E:{col:0x607888,rough:0.52,ip:'IP65'}};
+const CONN_DATA={npt:{label:'½" NPT',psi:'3000 PSI',col:0x8aacc0,rough:0.28,sx:1,sz:1},bsp:{label:'½" BSP',psi:'3000 PSI',col:0x8aacc0,rough:0.28,sx:1,sz:1},'flange-ansi':{label:'ANSI 150/300',psi:'CLASS 150/300',col:0x9abccc,rough:0.22,sx:1.55,sz:1.35},'flange-din':{label:'DIN PN16/40',psi:'PN 16/40',col:0x9abccc,rough:0.22,sx:1.55,sz:1.35},compression:{label:'Compression',psi:'6000 PSI',col:0xaabccc,rough:0.34,sx:1,sz:1},weldin:{label:'Socket Weld-In',psi:'6000 PSI',col:0x607888,rough:0.42,sx:1,sz:1},triclamp:{label:'Tri-Clamp',psi:'150 PSI',col:0xc0d0d8,rough:0.20,sx:1.25,sz:1.25}};
+const CONN_CODE={npt:'½NPT',bsp:'½BSP','flange-ansi':'ANSI-FL','flange-din':'DIN-FL',compression:'COMPR',weldin:'WELD',triclamp:'TC'};
+const RESP_TIME={grounded:'0.3',ungrounded:'1.2',exposed:'0.08',dual:'0.3'};
+
+let modelParts={},tcGroup=null,scene,camera,renderer,gridMesh,sPlane;
+let sph={th:0.5,ph:1.25,r:3.5},drag=false,mx=0,my=0;
+const raycaster=new THREE.Raycaster();
+const mouse=new THREE.Vector2();
+let hoveredMesh=null;
+const vp=document.getElementById('viewport');
+
+// Three.js setup
+scene=new THREE.Scene();
+camera=new THREE.PerspectiveCamera(38,1,0.1,100);
+renderer=new THREE.WebGLRenderer({antialias:true,alpha:false});
+renderer.outputEncoding=THREE.sRGBEncoding;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure=1.25;
+renderer.shadowMap.enabled=true;
+renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.setClearColor(0x07090d);
+renderer.domElement.style.display='block';
+renderer.domElement.style.width='100%';
+renderer.domElement.style.height='100%';
+vp.insertBefore(renderer.domElement,vp.firstChild);
+
+// Lights
+const ambLight=new THREE.AmbientLight(0x8fa3bf,0.55);scene.add(ambLight);
+const dirLight=new THREE.DirectionalLight(0xffffff,1.3);dirLight.position.set(3,6,4);dirLight.castShadow=true;dirLight.shadow.mapSize.set(1024,1024);dirLight.shadow.camera.near=0.5;dirLight.shadow.camera.far=20;dirLight.shadow.camera.left=-3;dirLight.shadow.camera.right=3;dirLight.shadow.camera.top=3;dirLight.shadow.camera.bottom=-3;scene.add(dirLight);
+const dirLight2=new THREE.DirectionalLight(0x4477cc,0.5);dirLight2.position.set(-4,2,-3);scene.add(dirLight2);
+const dirLight3=new THREE.DirectionalLight(0x223366,0.2);dirLight3.position.set(0,-5,-2);scene.add(dirLight3);
+
+// Grid + Shadow plane
+gridMesh=new THREE.GridHelper(5,22,0x1a2540,0x111828);gridMesh.position.y=-1.35;scene.add(gridMesh);
+const spGeo=new THREE.PlaneGeometry(8,8);const spMat=new THREE.ShadowMaterial({opacity:0.22});sPlane=new THREE.Mesh(spGeo,spMat);sPlane.rotation.x=-Math.PI/2;sPlane.position.y=-1.36;sPlane.receiveShadow=true;scene.add(sPlane);
+
+function buildModel(){
+  const group=new THREE.Group();
+  // Probe
+  const probeGeo=new THREE.CylinderGeometry(0.04,0.04,1.5,16);
+  const probeMat=new THREE.MeshStandardMaterial({color:0x7a9ab8,metalness:0.85,roughness:0.34});
+  const probe=new THREE.Mesh(probeGeo,probeMat);probe.position.y=-0.75;probe.castShadow=true;probe.name='probe';probe.userData={label:'Thermocouple Sheath — MI Cable',baseCol:0x7a9ab8};group.add(probe);modelParts.probe=probe;
+  // Fitting
+  const fitGeo=new THREE.CylinderGeometry(0.12,0.12,0.25,6);
+  const fitMat=new THREE.MeshStandardMaterial({color:0x8aacc0,metalness:0.88,roughness:0.28});
+  const fitting=new THREE.Mesh(fitGeo,fitMat);fitting.position.y=0.0;fitting.castShadow=true;fitting.name='fitting';fitting.userData={label:'Process Connection — NPT Fitting',baseCol:0x8aacc0};group.add(fitting);modelParts.fitting=fitting;
+  // Neck
+  const neckGeo=new THREE.CylinderGeometry(0.04,0.04,0.35,16);
+  const neckMat=new THREE.MeshStandardMaterial({color:0x7a9ab8,metalness:0.85,roughness:0.34});
+  const neck=new THREE.Mesh(neckGeo,neckMat);neck.position.y=0.28;neck.castShadow=true;neck.name='neck';neck.userData={label:'Transition Neck',baseCol:0x7a9ab8};group.add(neck);modelParts.neck=neck;
+  // Collar
+  const colGeo=new THREE.CylinderGeometry(0.10,0.10,0.15,16);
+  const colMat=new THREE.MeshStandardMaterial({color:0x8aacc0,metalness:0.82,roughness:0.36});
+  const collar=new THREE.Mesh(colGeo,colMat);collar.position.y=0.50;collar.castShadow=true;collar.name='collar';collar.userData={label:'Cable Entry Collar',baseCol:0x8aacc0};group.add(collar);modelParts.collar=collar;
+  // Head
+  const headGeo=new THREE.BoxGeometry(0.38,0.42,0.28);
+  const headMat=new THREE.MeshStandardMaterial({color:0x607888,metalness:0.75,roughness:0.52});
+  const head=new THREE.Mesh(headGeo,headMat);head.position.y=0.80;head.castShadow=true;head.name='head';head.userData={label:'Connection Head — Type A (IP65)',baseCol:0x607888};group.add(head);modelParts.head=head;
+  centerAndAddGroup(group);
+  applyConfig();
+  document.getElementById('loader').style.display='none';
+  countVerts();
+}
+
+function centerAndAddGroup(group){
+  if(tcGroup){scene.remove(tcGroup);}
+  const box=new THREE.Box3().setFromObject(group);
+  const size=box.getSize(new THREE.Vector3());
+  const center=box.getCenter(new THREE.Vector3());
+  const sc=2.8/Math.max(size.x,size.y,size.z);
+  group.scale.setScalar(sc);
+  group.position.set(-center.x*sc,-center.y*sc-0.05,-center.z*sc);
+  scene.add(group);tcGroup=group;
+}
+
+function countVerts(){
+  let v=0;Object.values(modelParts).forEach(m=>{if(m.geometry)v+=m.geometry.attributes.position.count;});
+  document.getElementById('sVerts').textContent=v;
+}
+
+// Orbit
+const cvs=renderer.domElement;
+cvs.addEventListener('mousedown',e=>{drag=true;mx=e.clientX;my=e.clientY;});
+window.addEventListener('mouseup',()=>{drag=false;});
+cvs.addEventListener('mousemove',e=>{
+  if(drag){sph.th+=(e.clientX-mx)*0.008;sph.ph+=(e.clientY-my)*0.008;sph.ph=Math.max(0.1,Math.min(Math.PI-0.1,sph.ph));mx=e.clientX;my=e.clientY;camUpdate();}
+  else{doHover(e);}
+});
+cvs.addEventListener('wheel',e=>{e.preventDefault();sph.r+=e.deltaY*0.003;sph.r=Math.max(1.2,Math.min(9,sph.r));camUpdate();},{passive:false});
+cvs.addEventListener('touchstart',e=>{if(e.touches.length===1){drag=true;mx=e.touches[0].clientX;my=e.touches[0].clientY;}},{passive:true});
+cvs.addEventListener('touchmove',e=>{if(drag&&e.touches.length===1){const t=e.touches[0];sph.th+=(t.clientX-mx)*0.008;sph.ph+=(t.clientY-my)*0.008;sph.ph=Math.max(0.1,Math.min(Math.PI-0.1,sph.ph));mx=t.clientX;my=t.clientY;camUpdate();}},{passive:true});
+cvs.addEventListener('touchend',()=>{drag=false;},{passive:true});
+
+function camUpdate(){
+  camera.position.x=sph.r*Math.sin(sph.ph)*Math.sin(sph.th);
+  camera.position.y=sph.r*Math.cos(sph.ph);
+  camera.position.z=sph.r*Math.sin(sph.ph)*Math.cos(sph.th);
+  camera.lookAt(0,0.05,0);
+  document.getElementById('sRot').textContent=Math.round(THREE.MathUtils.radToDeg(sph.th)%360);
+  document.getElementById('sZoom').textContent=(3.5/sph.r).toFixed(1);
+  if(S.dims)drawDims();
+}
+function setView(th,ph,r){sph={th,ph,r};camUpdate();}
+function fitView(){sph={th:0.5,ph:1.25,r:3.5};camUpdate();}
+
+// Hover
+function doHover(e){
+  if(!S.labels)return;
+  const rect=cvs.getBoundingClientRect();
+  mouse.x=((e.clientX-rect.left)/rect.width)*2-1;
+  mouse.y=-((e.clientY-rect.top)/rect.height)*2+1;
+  raycaster.setFromCamera(mouse,camera);
+  const hits=raycaster.intersectObjects(Object.values(modelParts));
+  const pl=document.getElementById('partLabel');
+  if(hoveredMesh&&(!hits.length||hits[0].object!==hoveredMesh)){
+    hoveredMesh.material.emissive.setHex(hoveredMesh.name==='head'?TYPE_EMISSIVE[S.type]:0x000000);
+    hoveredMesh.material.emissiveIntensity=hoveredMesh.name==='head'?0.3:0;
+    hoveredMesh=null;pl.style.opacity='0';
+  }
+  if(hits.length){
+    const m=hits[0].object;
+    if(m!==hoveredMesh){hoveredMesh=m;m.material.emissive.setHex(0x1a4a88);m.material.emissiveIntensity=0.5;}
+    pl.textContent=m.userData.label||m.name;
+    pl.style.left=(e.clientX-rect.left+16)+'px';pl.style.top=(e.clientY-rect.top-30)+'px';pl.style.opacity='1';
+  }
+}
+
+// applyConfig
+function applyConfig(){
+  if(!modelParts.probe)return;
+  const sm=SHEATH_MAT[S.sheath]||SHEATH_MAT.SS316;
+  const hm=HEAD_MAT[S.head]||HEAD_MAT.A;
+  const cd=CONN_DATA[S.conn]||CONN_DATA.npt;
+  // Probe + Neck color
+  modelParts.probe.material.color.setHex(sm.col);modelParts.probe.material.roughness=sm.rough;
+  modelParts.neck.material.color.setHex(sm.col);modelParts.neck.material.roughness=sm.rough;
+  // Diameter scale
+  const dS=S.dia/6;
+  modelParts.probe.scale.set(dS,1,dS);modelParts.neck.scale.set(dS,1,dS);
+  // Insertion scale
+  const yS=S.ins/150;modelParts.probe.scale.y=yS;
+  modelParts.probe.position.y=-0.75*yS;
+  // Fitting
+  modelParts.fitting.material.color.setHex(cd.col);modelParts.fitting.material.roughness=cd.rough;
+  modelParts.fitting.scale.set(cd.sx,1,cd.sz);
+  // Collar
+  modelParts.collar.material.color.setHex(cd.col);modelParts.collar.material.roughness=cd.rough;
+  // Head
+  modelParts.head.material.color.setHex(hm.col);modelParts.head.material.roughness=hm.rough;
+  modelParts.head.material.emissive.setHex(TYPE_EMISSIVE[S.type]||0);modelParts.head.material.emissiveIntensity=0.3;
+  modelParts.head.userData.label='Connection Head — Type '+(S.head==='none'?'None':S.head)+' ('+(hm.ip||'IP65')+')';
+  // Wireframe
+  Object.values(modelParts).forEach(m=>{m.material.wireframe=S.wireframe;});
+  // matbadge
+  document.getElementById('matbadge').textContent='MAT: '+S.sheath+'  |  HEAD: TYPE-'+(S.head==='none'?'NONE':S.head)+'  |  IP: '+(hm.ip||'IP65');
+  if(S.dims)drawDims();
+  updCode();
+}
+
+// Dimension overlay
+const dimCv=document.getElementById('dimCv');const dimCtx=dimCv.getContext('2d');
+function w2s(x,y,z){
+  const v=new THREE.Vector3(x,y,z).project(camera);
+  return{x:(v.x*0.5+0.5)*dimCv.width,y:(-v.y*0.5+0.5)*dimCv.height};
+}
+function drawDims(){
+  dimCv.width=dimCv.clientWidth;dimCv.height=dimCv.clientHeight;
+  dimCtx.clearRect(0,0,dimCv.width,dimCv.height);
+  if(!S.dims)return;
+  dimCtx.setLineDash([4,4]);dimCtx.lineWidth=1;dimCtx.font='10px "IBM Plex Mono"';
+  // Insertion length
+  const i1=w2s(0.22,-1.25,0),i2=w2s(0.22,-0.05,0);
+  dimCtx.strokeStyle='#2b7fff';dimCtx.fillStyle='#2b7fff';
+  dimCtx.beginPath();dimCtx.moveTo(i1.x,i1.y);dimCtx.lineTo(i2.x,i2.y);dimCtx.stroke();
+  dimCtx.beginPath();dimCtx.moveTo(i1.x-4,i1.y);dimCtx.lineTo(i1.x+4,i1.y);dimCtx.stroke();
+  dimCtx.beginPath();dimCtx.moveTo(i2.x-4,i2.y);dimCtx.lineTo(i2.x+4,i2.y);dimCtx.stroke();
+  dimCtx.setLineDash([]);dimCtx.fillText(S.ins+'mm',(i1.x+i2.x)/2+8,(i1.y+i2.y)/2-4);
+  dimCtx.font='8px "IBM Plex Mono"';dimCtx.fillStyle='rgba(43,127,255,0.7)';
+  dimCtx.fillText('INSERTION',(i1.x+i2.x)/2+8,(i1.y+i2.y)/2+8);
+  // Overall height
+  dimCtx.setLineDash([4,4]);const o1=w2s(-0.25,1.3,0),o2=w2s(-0.25,-1.25,0);
+  dimCtx.strokeStyle='rgba(240,125,36,0.7)';dimCtx.fillStyle='#f07d24';
+  dimCtx.beginPath();dimCtx.moveTo(o1.x,o1.y);dimCtx.lineTo(o2.x,o2.y);dimCtx.stroke();
+  dimCtx.beginPath();dimCtx.moveTo(o1.x-4,o1.y);dimCtx.lineTo(o1.x+4,o1.y);dimCtx.stroke();
+  dimCtx.beginPath();dimCtx.moveTo(o2.x-4,o2.y);dimCtx.lineTo(o2.x+4,o2.y);dimCtx.stroke();
+  dimCtx.setLineDash([]);dimCtx.font='10px "IBM Plex Mono"';
+  dimCtx.fillText(S.overall+'mm',o1.x-52,(o1.y+o2.y)/2-4);
+  dimCtx.font='8px "IBM Plex Mono"';dimCtx.fillStyle='rgba(240,125,36,0.6)';
+  dimCtx.fillText('OVERALL',o1.x-52,(o1.y+o2.y)/2+8);
+  // Diameter
+  dimCtx.setLineDash([4,4]);const d1=w2s(-0.10,-0.7,0.08),d2=w2s(0.10,-0.7,0.08);
+  dimCtx.strokeStyle='#28c96e';dimCtx.fillStyle='#28c96e';
+  dimCtx.beginPath();dimCtx.moveTo(d1.x,d1.y);dimCtx.lineTo(d2.x,d2.y);dimCtx.stroke();
+  dimCtx.setLineDash([]);dimCtx.font='10px "IBM Plex Mono"';
+  dimCtx.fillText('⌀'+S.dia+'mm',(d1.x+d2.x)/2,(d1.y+d2.y)/2-6);
+}
+
+// Toggles
+function togWire(el){S.wireframe=!S.wireframe;el.classList.toggle('on');applyConfig();}
+function togDims(el){S.dims=!S.dims;el.classList.toggle('on');if(!S.dims){dimCtx.clearRect(0,0,dimCv.width,dimCv.height);}else drawDims();}
+function togGrid(el){S.grid=!S.grid;el.classList.toggle('on');gridMesh.visible=S.grid;sPlane.visible=S.grid;}
+function togLabels(el){S.labels=!S.labels;el.classList.toggle('on');if(!S.labels)document.getElementById('partLabel').style.opacity='0';}
+
+// Resize
+function resize(){
+  const rect=vp.getBoundingClientRect();
+  renderer.setSize(rect.width,rect.height);
+  camera.aspect=rect.width/rect.height;camera.updateProjectionMatrix();
+  dimCv.width=rect.width;dimCv.height=rect.height;
+  if(S.dims)drawDims();
+}
+
+// Animate
+function animate(){requestAnimationFrame(animate);renderer.render(scene,camera);}
+
+// Step navigation
+function goStep(n){
+  S.step=n;
+  document.querySelectorAll('.sb').forEach((b,i)=>{b.classList.toggle('active',i===n-1);});
+  document.querySelectorAll('.sp').forEach((p,i)=>{
+    if(i===n-1)p.classList.add('active');else p.classList.remove('active');
+  });
+  document.getElementById('stepBadge').textContent='STEP '+n+' / 8';
+}
+
+// Build pills
+(function(){
+  const pc=document.getElementById('pills');
+  for(let i=1;i<=8;i++){
+    const p=document.createElement('div');p.className='sp'+(i===1?' active':'');p.textContent=i;
+    p.onclick=()=>goStep(i);pc.appendChild(p);
+  }
+})();
+
+// Build step UI
+function buildStepsUI(){
+  const box=document.getElementById('stepsBox');
+  box.innerHTML=`
+  <!-- STEP 1 -->
+  <div class="sb active" id="s1">
+    <div class="sb-num">STEP 01</div><h3>Thermocouple Type</h3>
+    <div class="sdesc">Select sensor element type and temperature range.</div>
+    <div class="rcgrid c3" id="typeGrid"></div>
+    <div class="vbox" id="v1"></div>
+    <div class="navbtns"><button class="nb" onclick="goStep(2)">NEXT →</button></div>
+  </div>
+  <!-- STEP 2 -->
+  <div class="sb" id="s2">
+    <div class="sb-num">STEP 02</div><h3>Sheath Material</h3>
+    <div class="sdesc">Choose sheath alloy for process compatibility.</div>
+    <div class="rcgrid c2" id="sheathGrid"></div>
+    <div class="vbox" id="v2"></div>
+    <div class="navbtns"><button class="bb" onclick="goStep(1)">← BACK</button><button class="nb" onclick="goStep(3)">NEXT →</button></div>
+  </div>
+  <!-- STEP 3 -->
+  <div class="sb" id="s3">
+    <div class="sb-num">STEP 03</div><h3>Dimensions</h3>
+    <div class="sdesc">Set probe diameter and insertion length.</div>
+    <div class="fg"><label>Probe Diameter (mm)</label><div class="rg"><input type="range" min="1.5" max="12" step="0.5" value="6" oninput="S.dia=parseFloat(this.value);document.getElementById('rvDia').textContent=this.value;applyConfig();valStep3()"><span class="rv" id="rvDia">6</span></div></div>
+    <div class="fg"><label>Insertion Length (mm)</label><div class="rg"><input type="range" min="50" max="3000" step="10" value="150" oninput="S.ins=parseInt(this.value);document.getElementById('rvIns').textContent=this.value;applyConfig();valStep3()"><span class="rv" id="rvIns">150</span></div></div>
+    <div class="fg"><label>Overall Length (mm)</label><div class="rg"><input type="range" min="100" max="5000" step="10" value="280" oninput="S.overall=parseInt(this.value);document.getElementById('rvOvr').textContent=this.value;updCode();if(S.dims)drawDims()"><span class="rv" id="rvOvr">280</span></div></div>
+    <div class="vbox" id="v3"></div>
+    <div class="navbtns"><button class="bb" onclick="goStep(2)">← BACK</button><button class="nb" onclick="goStep(4)">NEXT →</button></div>
+  </div>
+  <!-- STEP 4 -->
+  <div class="sb" id="s4">
+    <div class="sb-num">STEP 04</div><h3>Junction Type</h3>
+    <div class="sdesc">Select sensing junction configuration.</div>
+    <div class="rcgrid c2" id="juncGrid"></div>
+    <div class="vbox" id="v4"></div>
+    <div class="navbtns"><button class="bb" onclick="goStep(3)">← BACK</button><button class="nb" onclick="goStep(5)">NEXT →</button></div>
+  </div>
+  <!-- STEP 5 -->
+  <div class="sb" id="s5">
+    <div class="sb-num">STEP 05</div><h3>Connection Head</h3>
+    <div class="sdesc">Select terminal head and cable entry.</div>
+    <div class="fg"><label>Head Type</label><select id="selHead" onchange="S.head=this.value;applyConfig()"><option value="none">No Head (Extension Leads)</option><option value="A" selected>Type A — Weatherproof IP65</option><option value="B">Type B — Heavy Duty IP67</option><option value="C">Type C — ATEX Explosion Proof</option><option value="D">Type D — Miniature IP54</option><option value="E">Type E — Dual Compartment IP65</option></select></div>
+    <div class="fg"><label>Terminal Material</label><select><option>Ceramic</option><option>Steatite</option><option>Bakelite</option></select></div>
+    <div class="fg"><label>Cable Entry</label><select><option>M20×1.5</option><option>½" NPT</option><option>PG13.5</option></select></div>
+    <div class="navbtns"><button class="bb" onclick="goStep(4)">← BACK</button><button class="nb" onclick="goStep(6)">NEXT →</button></div>
+  </div>
+  <!-- STEP 6 -->
+  <div class="sb" id="s6">
+    <div class="sb-num">STEP 06</div><h3>Extension Cable</h3>
+    <div class="sdesc">Configure cable type, shielding, and length.</div>
+    <div class="fg"><label>Cable Type</label><select onchange="S.cable=this.value;updCode()"><option value="comp">Compensating</option><option value="ext">Extension Grade</option><option value="rtd">RTD 3-Wire</option></select></div>
+    <div class="fg"><label>Shielding</label><select onchange="S.cableShield=this.value;updCode()"><option value="unshielded">Unshielded</option><option value="shielded">Braided Shield</option><option value="armored">SS Armored</option></select></div>
+    <div class="fg"><label>Cable Length (m)</label><div class="rg"><input type="range" min="0.5" max="50" step="0.5" value="2.0" oninput="S.cableLen=parseFloat(this.value);document.getElementById('rvCbl').textContent=parseFloat(this.value).toFixed(1);updCode()"><span class="rv" id="rvCbl">2.0</span></div></div>
+    <div class="navbtns"><button class="bb" onclick="goStep(5)">← BACK</button><button class="nb" onclick="goStep(7)">NEXT →</button></div>
+  </div>
+  <!-- STEP 7 -->
+  <div class="sb" id="s7">
+    <div class="sb-num">STEP 07</div><h3>Mounting Style</h3>
+    <div class="sdesc">Select installation mounting method.</div>
+    <div class="rcgrid c2" id="mountGrid"></div>
+    <div class="navbtns"><button class="bb" onclick="goStep(6)">← BACK</button><button class="nb" onclick="goStep(8)">NEXT →</button></div>
+  </div>
+  <!-- STEP 8 -->
+  <div class="sb" id="s8">
+    <div class="sb-num">STEP 08</div><h3>Process Connection</h3>
+    <div class="sdesc">Configure process fitting and pressure class.</div>
+    <div class="fg"><label>Connection Type</label><select id="selConn" onchange="S.conn=this.value;applyConfig();valStep8();togThread()"><option value="npt">Threaded — ½" NPT</option><option value="bsp">Threaded — ½" BSP</option><option value="flange-ansi">Flanged — ANSI 150/300</option><option value="flange-din">Flanged — DIN PN16/40</option><option value="compression">Compression Fitting</option><option value="weldin">Socket Weld-In</option><option value="triclamp">Sanitary Tri-Clamp</option></select></div>
+    <div class="fg" id="fgThread"><label>Thread Size</label><select onchange="S.threadSize=this.value;updCode()"><option value="1/4">¼" NPT</option><option value="1/2" selected>½" NPT</option><option value="3/4">¾" NPT</option><option value="1">1" NPT</option></select></div>
+    <div class="fg"><label>Pressure Rating</label><input type="text" id="psiBox" value="3000 PSI" readonly style="color:var(--green);border-color:var(--green);background:rgba(40,201,110,0.06)"></div>
+    <div class="vbox" id="v8"></div>
+    <div class="glbzone" id="glbZone" onclick="document.getElementById('glbIn').click()" ondragover="event.preventDefault();this.classList.add('drag')" ondragleave="this.classList.remove('drag')" ondrop="event.preventDefault();this.classList.remove('drag');onGlbDrop(event)">
+      <div class="gz-icon">⬡</div>
+      <div class="gz-title">DROP GLB FILE OR CLICK TO BROWSE</div>
+      <div class="gz-sub">Replaces the 3D model instantly</div>
+    </div>
+    <input type="file" id="glbIn" accept=".glb" style="display:none" onchange="onGlbInput(event)">
+    <div class="glb-ok" id="glbOk"></div>
+    <div class="navbtns"><button class="bb" onclick="goStep(7)">← BACK</button><button class="gb" onclick="finalize()">✓ FINALIZE</button></div>
+  </div>`;
+  // Populate radio grids
+  populateTypes();populateSheaths();populateJunctions();populateMounts();
+}
+
+function mkRC(parent,items,stateKey,cb){
+  const grid=document.getElementById(parent);
+  items.forEach(it=>{
+    const d=document.createElement('div');d.className='rc'+(S[stateKey]===it.val?' sel':'');
+    d.innerHTML='<div class="rcdot"></div><div class="rc-label">'+it.label+'</div><div class="rc-sub">'+it.sub+'</div>'+(it.sub2?'<div class="rc-sub2">'+it.sub2+'</div>':'');
+    d.onclick=()=>{grid.querySelectorAll('.rc').forEach(c=>c.classList.remove('sel'));d.classList.add('sel');S[stateKey]=it.val;if(cb)cb(it);applyConfig();};
+    grid.appendChild(d);
+  });
+}
+function populateTypes(){
+  mkRC('typeGrid',[
+    {val:'K',label:'TYPE K',sub:'−200 to 1260°C',sub2:'NiCr / NiAl'},
+    {val:'J',label:'TYPE J',sub:'−40 to 750°C',sub2:'Fe / CuNi'},
+    {val:'T',label:'TYPE T',sub:'−200 to 350°C',sub2:'Cu / CuNi'},
+    {val:'N',label:'TYPE N',sub:'−200 to 1300°C',sub2:'NiCrSi / NiSi'},
+    {val:'R',label:'TYPE R',sub:'0 to 1480°C',sub2:'Pt13Rh / Pt'},
+    {val:'S',label:'TYPE S',sub:'0 to 1480°C',sub2:'Pt10Rh / Pt'}
+  ],'type');
+}
+function populateSheaths(){
+  mkRC('sheathGrid',[
+    {val:'SS316',label:'SS316',sub:'316 Stainless — General purpose',sub2:'To 900°C'},
+    {val:'SS310',label:'SS310',sub:'310 Stainless — High temperature',sub2:'To 1100°C'},
+    {val:'INC600',label:'INC600',sub:'Inconel 600 — Oxidizing envs',sub2:'To 1150°C'},
+    {val:'HAST',label:'HAST',sub:'Hastelloy C — Corrosive media',sub2:'To 1040°C'}
+  ],'sheath',()=>{const v=document.getElementById('v2');v.className='vbox info';v.textContent='✓ Sheath material updated. Verify chemical compatibility.';});
+}
+function populateJunctions(){
+  mkRC('juncGrid',[
+    {val:'grounded',label:'GROUNDED',sub:'Fastest response / Welded to sheath'},
+    {val:'ungrounded',label:'UNGROUNDED',sub:'EMI resistant / ~1.0s response'},
+    {val:'exposed',label:'EXPOSED TIP',sub:'Ultra fast / Gas & air only'},
+    {val:'dual',label:'DUAL ELEMENT',sub:'Redundancy / Safety critical'}
+  ],'junction',it=>{document.getElementById('ds-resp').textContent=RESP_TIME[it.val];});
+}
+function populateMounts(){
+  mkRC('mountGrid',[
+    {val:'fixed',label:'FIXED',sub:'Permanent installation'},
+    {val:'adjustable',label:'ADJUSTABLE',sub:'Variable insertion depth'},
+    {val:'retractable',label:'RETRACTABLE',sub:'Online removal capability'},
+    {val:'spring',label:'SPRING LOADED',sub:'Constant contact pressure'}
+  ],'mount');
+}
+
+function valStep3(){
+  const v=document.getElementById('v3');
+  if(S.dia<3&&S.ins>500){v.className='vbox warn';v.textContent='⚠ Small diameter at long insertion: vibration fatigue risk.';}
+  else if(S.ins>2000){v.className='vbox warn';v.textContent='⚠ Insertion > 2000mm: consider thermowell support.';}
+  else{v.className='vbox';v.textContent='';}
+}
+function valStep8(){
+  const v=document.getElementById('v8');const cd=CONN_DATA[S.conn];
+  document.getElementById('psiBox').value=cd?cd.psi:'—';
+  if((S.conn==='flange-ansi'||S.conn==='flange-din')&&S.dia<6){v.className='vbox err';v.textContent='⊗ Flange not suitable for probe diameter < 6mm.';}
+  else if(S.conn==='bsp'){v.className='vbox warn';v.textContent='⚠ BSP non-standard for North American installations.';}
+  else{v.className='vbox ok';v.textContent='✓ Connection compatible with current probe dimensions.';}
+}
+function togThread(){
+  const hide=['flange-ansi','flange-din','weldin','triclamp'].includes(S.conn);
+  document.getElementById('fgThread').style.display=hide?'none':'block';
+}
+
+// Datasheet updates
+function updCode(){
+  const cc=CONN_CODE[S.conn]||'½NPT';
+  const code='TSE-'+S.type+'-'+S.sheath+'-'+S.dia+'D-'+S.ins+'IL-'+cc+'-'+(S.head==='none'?'X':S.head)+'-'+S.cableLen.toFixed(0)+'M';
+  document.getElementById('dscode').textContent=code;
+  updDS();
+}
+function updDS(){
+  const td=TD[S.type]||TD.K;const hm=HEAD_MAT[S.head]||HEAD_MAT.A;const cd=CONN_DATA[S.conn]||CONN_DATA.npt;
+  document.getElementById('ds-type').textContent=S.type;
+  document.getElementById('ds-mt').textContent=td.mt;
+  document.getElementById('ds-sh').textContent=S.sheath;
+  document.getElementById('ds-ins').textContent=S.ins;
+  document.getElementById('ds-dia').textContent=S.dia;
+  document.getElementById('ds-acc').textContent=td.acc;
+  document.getElementById('ds-resp').textContent=RESP_TIME[S.junction]||td.resp;
+  document.getElementById('ds-conn').textContent=cd.label;
+  document.getElementById('ds-ip').textContent=hm.ip||'IP65';
+  // Tags
+  const tags=document.getElementById('dstags');
+  tags.innerHTML='<span class="dtag hi">TYPE '+S.type+'</span><span class="dtag hi">'+S.sheath+'</span><span class="dtag">'+(hm.ip||'IP65')+'</span><span class="dtag">IEC584</span><span class="dtag">'+(CONN_CODE[S.conn]||'½NPT')+'</span><span class="dtag">'+S.junction.toUpperCase()+'</span>';
+}
+
+// GLB handlers
+function onGlbInput(e){if(e.target.files[0])handleGlbFile(e.target.files[0]);}
+function onGlbDrop(e){const f=e.dataTransfer.files[0];if(f&&f.name.endsWith('.glb'))handleGlbFile(f);}
+function handleGlbFile(file){
+  const reader=new FileReader();
+  reader.onload=function(e){buildFromGLB(e.target.result);
+    document.getElementById('glbOk').style.display='block';
+    document.getElementById('glbOk').textContent='✓ Loaded: '+file.name;
+  };reader.readAsArrayBuffer(file);
+}
+function buildFromGLB(buf){
+  const dv=new DataView(buf);
+  if(dv.getUint32(0,true)!==0x46546C67){alert('Invalid GLB');return;}
+  const jsonLen=dv.getUint32(12,true);
+  const jsonStr=new TextDecoder().decode(new Uint8Array(buf,20,jsonLen));
+  const gltf=JSON.parse(jsonStr);
+  const binOff=20+jsonLen+8;
+  const bin=buf.slice(binOff);
+  const group=new THREE.Group();
+  const meshes=[];
+  (gltf.meshes||[]).forEach(mesh=>{
+    (mesh.primitives||[]).forEach(prim=>{
+      const posAcc=gltf.accessors[prim.attributes.POSITION];
+      const posBv=gltf.bufferViews[posAcc.bufferView];
+      const posArr=new Float32Array(bin,posBv.byteOffset||0,posAcc.count*3);
+      const geo=new THREE.BufferGeometry();
+      geo.setAttribute('position',new THREE.BufferAttribute(posArr.slice(),3));
+      if(prim.indices!==undefined){
+        const idxAcc=gltf.accessors[prim.indices];
+        const idxBv=gltf.bufferViews[idxAcc.bufferView];
+        let idxArr;
+        if(idxAcc.componentType===5125)idxArr=new Uint32Array(bin,idxBv.byteOffset||0,idxAcc.count);
+        else idxArr=new Uint16Array(bin,idxBv.byteOffset||0,idxAcc.count);
+        geo.setIndex(new THREE.BufferAttribute(idxArr.slice(),1));
+      }
+      geo.computeVertexNormals();
+      const m=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({color:0x7a9ab8,metalness:0.85,roughness:0.36}));
+      m.castShadow=true;meshes.push(m);
+    });
+  });
+  const names=['probe','fitting','neck','collar','head'];
+  modelParts={};
+  if(meshes.length===1){
+    // Segment single mesh by Y
+    const pos=meshes[0].geometry.attributes.position;
+    let yMin=Infinity,yMax=-Infinity;
+    for(let i=0;i<pos.count;i++){const y=pos.getY(i);if(y<yMin)yMin=y;if(y>yMax)yMax=y;}
+    const range=yMax-yMin;const cuts=[0,0.38,0.54,0.68,0.77,1.0];
+    for(let s=0;s<5;s++){
+      const lo=yMin+cuts[s]*range,hi=yMin+cuts[s+1]*range;
+      const geo=new THREE.BufferGeometry();
+      const verts=[];const idx=meshes[0].geometry.index;
+      const p=meshes[0].geometry.attributes.position;
+      if(idx){
+        for(let i=0;i<idx.count;i+=3){
+          const cy=(p.getY(idx.getX(i))+p.getY(idx.getX(i+1))+p.getY(idx.getX(i+2)))/3;
+          if(cy>=lo&&cy<hi){for(let j=0;j<3;j++){const vi=idx.getX(i+j);verts.push(p.getX(vi),p.getY(vi),p.getZ(vi));}}
+        }
+      }else{
+        for(let i=0;i<p.count;i+=3){
+          const cy=(p.getY(i)+p.getY(i+1)+p.getY(i+2))/3;
+          if(cy>=lo&&cy<hi){for(let j=0;j<3;j++)verts.push(p.getX(i+j),p.getY(i+j),p.getZ(i+j));}
+        }
+      }
+      geo.setAttribute('position',new THREE.BufferAttribute(new Float32Array(verts),3));
+      geo.computeVertexNormals();
+      const mat=new THREE.MeshStandardMaterial({color:0x7a9ab8,metalness:0.85,roughness:0.36});
+      const m=new THREE.Mesh(geo,mat);m.castShadow=true;m.name=names[s];
+      m.userData={label:names[s],baseCol:0x7a9ab8};
+      modelParts[names[s]]=m;group.add(m);
+    }
+  }else{
+    meshes.forEach((m,i)=>{const n=names[i]||('part'+i);m.name=n;m.userData={label:n,baseCol:0x7a9ab8};modelParts[n]=m;group.add(m);});
+  }
+  centerAndAddGroup(group);applyConfig();countVerts();
+}
+
+// Finalize
+function finalize(){
+  const pn='TS-'+Math.random().toString(36).substring(2,8).toUpperCase();
+  document.getElementById('dspart').textContent='PART# '+pn;
+  document.getElementById('dspart').classList.add('final');
+  document.querySelectorAll('.sp').forEach(p=>{p.classList.add('done');p.classList.remove('active');});
+  document.getElementById('stepBadge').textContent='✓ COMPLETE';
+}
+
+// Save / Reset
+function saveConfig(){
+  const blob=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='tempsens-config.json';a.click();
+}
+function resetAll(){if(confirm('Reset all configuration?'))location.reload();}
+
+// PDF Export
+function exportPDF(){
+  renderer.render(scene,camera);
+  const imgData=renderer.domElement.toDataURL('image/jpeg',0.92);
+  setTimeout(()=>_buildPDF(imgData),60);
+}
+function _buildPDF(modelImg){
+  const doc=new window.jspdf.jsPDF('p','mm','a4');
+  const W=210,H=297;
+  const td=TD[S.type]||TD.K;const hm=HEAD_MAT[S.head]||HEAD_MAT.A;const cd=CONN_DATA[S.conn]||CONN_DATA.npt;
+  const code=document.getElementById('dscode').textContent;
+  const now=new Date().toISOString().split('T')[0];
+  // Header
+  doc.setFillColor(16,19,26);doc.rect(0,0,W,22,'F');
+  doc.setFillColor(43,127,255);doc.rect(0,0,3,22,'F');
+  doc.setFont('helvetica','bold');doc.setFontSize(14);doc.setTextColor(238,241,248);doc.text('TEMPSENS',8,12);
+  doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(122,132,153);doc.text('THERMOCOUPLE ASSEMBLY DATASHEET',8,18);
+  doc.setFontSize(8);doc.setTextColor(240,125,36);doc.text(code,W-8,12,{align:'right'});
+  doc.setTextColor(122,132,153);doc.text(now,W-8,18,{align:'right'});
+  doc.setFillColor(43,127,255);doc.rect(0,21,W,0.8,'F');
+  // 3D image + Specs
+  let y=27;
+  doc.setFillColor(7,9,13);doc.rect(8,y,68,72,'F');
+  doc.setDrawColor(43,127,255);doc.setLineWidth(0.3);doc.rect(8,y,68,72,'S');
+  // Corner marks
+  const cx=8,cy=y,cw=68,ch=72,cm=4;
+  doc.line(cx,cy+cm,cx,cy);doc.line(cx,cy,cx+cm,cy);
+  doc.line(cx+cw-cm,cy,cx+cw,cy);doc.line(cx+cw,cy,cx+cw,cy+cm);
+  doc.line(cx,cy+ch-cm,cx,cy+ch);doc.line(cx,cy+ch,cx+cm,cy+ch);
+  doc.line(cx+cw-cm,cy+ch,cx+cw,cy+ch);doc.line(cx+cw,cy+ch-cm,cx+cw,cy+ch);
+  if(modelImg)try{doc.addImage(modelImg,'JPEG',9,y+1,66,70);}catch(e){}
+  // Specs table
+  const sx=82;doc.setFillColor(43,127,255);doc.rect(sx,y,W-sx-8,6,'F');
+  doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(255);doc.text('TECHNICAL SPECIFICATIONS',sx+3,y+4);
+  const specs=[['TC Type','Type '+S.type],['Max Temp',td.mt+'°C'],['Sheath',S.sheath],['Diameter',S.dia+' mm'],['Insertion',S.ins+' mm'],['Overall',S.overall+' mm'],['Junction',S.junction],['Accuracy',td.acc],['Response',RESP_TIME[S.junction]+'s']];
+  y+=7;
+  specs.forEach((r,i)=>{
+    if(i%2===0){doc.setFillColor(21,25,33);}else{doc.setFillColor(16,19,26);}
+    doc.rect(sx,y,W-sx-8,6.5,'F');
+    doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(122,132,153);doc.text(r[0],sx+3,y+4.5);
+    doc.setTextColor(208,216,232);doc.text(r[1],W-12,y+4.5,{align:'right'});
+    y+=6.5;
+  });
+  // Config Summary
+  y+=6;doc.setFillColor(43,127,255);doc.rect(8,y,3,7,'F');doc.setFillColor(16,19,26);doc.rect(11,y,W-19,7,'F');
+  doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(238,241,248);doc.text('CONFIGURATION SUMMARY',14,y+5);
+  y+=10;
+  const cfgRows=[['Head Type','Type '+(S.head==='none'?'None':S.head),'IP Class',hm.ip||'IP65'],['Connection',cd.label,'Mount',S.mount],['Junction',S.junction,'Standard','IEC 60584'],['Sheath Finish','Polished','Calibration','As-built']];
+  cfgRows.forEach((r,i)=>{
+    if(i%2===0)doc.setFillColor(21,25,33);else doc.setFillColor(16,19,26);
+    doc.rect(8,y,W-16,6,'F');
+    doc.setFont('helvetica','normal');doc.setFontSize(6.5);
+    doc.setTextColor(122,132,153);doc.text(r[0],11,y+4);doc.setTextColor(208,216,232);doc.text(r[1],60,y+4);
+    doc.setTextColor(122,132,153);doc.text(r[2],110,y+4);doc.setTextColor(208,216,232);doc.text(r[3],160,y+4);
+    y+=6;
+  });
+  // Dimensional Summary
+  y+=6;doc.setFillColor(43,127,255);doc.rect(8,y,3,7,'F');doc.setFillColor(16,19,26);doc.rect(11,y,W-19,7,'F');
+  doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(238,241,248);doc.text('DIMENSIONAL SUMMARY',14,y+5);
+  y+=10;
+  const dimBoxes=[['PROBE DIA',S.dia+' mm'],['INSERTION',S.ins+' mm'],['OVERALL L',S.overall+' mm'],['SHEATH',S.sheath]];
+  const bw=(W-16-9)/4;
+  dimBoxes.forEach((b,i)=>{
+    const bx=8+i*(bw+3);
+    doc.setFillColor(16,19,26);doc.rect(bx,y,bw,20,'F');
+    doc.setDrawColor(43,127,255);doc.setLineWidth(0.2);doc.rect(bx,y,bw,20,'S');
+    doc.setFont('helvetica','normal');doc.setFontSize(6);doc.setTextColor(122,132,153);doc.text(b[0],bx+bw/2,y+6,{align:'center'});
+    doc.setFont('helvetica','bold');doc.setFontSize(11);doc.setTextColor(43,127,255);doc.text(b[1],bx+bw/2,y+15,{align:'center'});
+  });
+  y+=26;
+  // Process Connection
+  doc.setFillColor(43,127,255);doc.rect(8,y,3,7,'F');doc.setFillColor(16,19,26);doc.rect(11,y,W-19,7,'F');
+  doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(238,241,248);doc.text('PROCESS CONNECTION DETAILS',14,y+5);
+  y+=10;
+  const pcRows=[['Type',cd.label,'Pressure',cd.psi],['Seal','Metal-to-metal','Temp Limit',td.mt+'°C'],['Material',S.sheath,'Finish','Machined']];
+  pcRows.forEach((r,i)=>{
+    if(i%2===0)doc.setFillColor(21,25,33);else doc.setFillColor(16,19,26);
+    doc.rect(8,y,W-16,6,'F');
+    doc.setFont('helvetica','normal');doc.setFontSize(6.5);
+    doc.setTextColor(122,132,153);doc.text(r[0],11,y+4);doc.setTextColor(208,216,232);doc.text(r[1],60,y+4);
+    doc.setTextColor(122,132,153);doc.text(r[2],110,y+4);doc.setTextColor(208,216,232);doc.text(r[3],160,y+4);
+    y+=6;
+  });
+  // Electrical
+  y+=6;doc.setFillColor(43,127,255);doc.rect(8,y,3,7,'F');doc.setFillColor(16,19,26);doc.rect(11,y,W-19,7,'F');
+  doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(238,241,248);doc.text('ELECTRICAL AND PERFORMANCE',14,y+5);
+  y+=10;
+  const elRows=[['EMF Standard','IEC 60584','Insulation','>1000MΩ @ 500VDC'],['Accuracy',td.acc,'Response',RESP_TIME[S.junction]+'s'],['Cable',S.cable,'Length',S.cableLen+'m']];
+  elRows.forEach((r,i)=>{
+    if(i%2===0)doc.setFillColor(21,25,33);else doc.setFillColor(16,19,26);
+    doc.rect(8,y,W-16,6,'F');
+    doc.setFont('helvetica','normal');doc.setFontSize(6.5);
+    doc.setTextColor(122,132,153);doc.text(r[0],11,y+4);doc.setTextColor(208,216,232);doc.text(r[1],60,y+4);
+    doc.setTextColor(122,132,153);doc.text(r[2],110,y+4);doc.setTextColor(208,216,232);doc.text(r[3],160,y+4);
+    y+=6;
+  });
+  // Order Code
+  y+=6;doc.setFillColor(16,19,26);doc.rect(8,y,W-16,20,'F');
+  doc.setDrawColor(43,127,255);doc.setLineWidth(0.3);doc.rect(8,y,W-16,20,'S');
+  doc.setFillColor(43,127,255);doc.rect(8,y,W-16,5,'F');
+  doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(255);doc.text('ORDER CODE',11,y+3.5);
+  doc.setFont('courier','bold');doc.setFontSize(11);doc.setTextColor(240,125,36);doc.text(code,11,y+13);
+  const pn=document.getElementById('dspart').textContent;
+  doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(122,132,153);doc.text(pn,W-12,y+13,{align:'right'});
+  y+=26;
+  // Certifications
+  const certs=['IEC 60584','EN 60584','ASTM E230','CE Marking','RoHS','ISO 9001'];
+  const cbw=(W-16-15)/6;
+  certs.forEach((c,i)=>{
+    const cbx=8+i*(cbw+3);
+    doc.setFillColor(21,25,33);doc.rect(cbx,y,cbw,10,'F');
+    doc.setDrawColor(40,51,74);doc.setLineWidth(0.15);doc.rect(cbx,y,cbw,10,'S');
+    doc.setFont('helvetica','normal');doc.setFontSize(5.5);doc.setTextColor(143,163,191);doc.text(c,cbx+cbw/2,y+6,{align:'center'});
+  });
+  // Footer
+  doc.setFillColor(16,19,26);doc.rect(0,H-12,W,12,'F');
+  doc.setFillColor(43,127,255);doc.rect(0,H-12,W,0.5,'F');
+  doc.setFont('helvetica','normal');doc.setFontSize(6);doc.setTextColor(122,132,153);
+  doc.text('Tempsens Instruments (I) Pvt. Ltd. — Temperature Sensing Solutions',W/2,H-5,{align:'center'});
+  doc.text('Page 1 of 1',W-10,H-5,{align:'right'});
+  doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(43,127,255);doc.text('TEMPSENS',10,H-5);
+  doc.save('Tempsens-'+S.type+'-'+S.sheath+'-'+S.ins+'mm.pdf');
+}
+
+// INIT
+buildStepsUI();
+window.addEventListener('resize',resize);
+resize();
+camUpdate();
+animate();
+updDS();
+buildModel();
+</script>
+</body>
+</html>
