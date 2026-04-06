@@ -3,1103 +3,665 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Tempsens Pro Configurator — Thermocouple Assembly Builder</title>
-<meta name="description" content="Industrial thermocouple product configurator by Tempsens Instruments. Configure, visualize in 3D, and export datasheets.">
-<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<title>Premium Configuration System</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
-<script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';</script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.5.1/mammoth.browser.min.js"></script>
 <style>
-:root{
---bg:#ffffff;--panel:#f4f5f7;--card:#ffffff;--hover:#fafafa;
---b0:#e2e5ea;--b1:#ced4da;--blue:#ffa600;--bdim:#e69500;
---bglow:rgba(255,166,0,0.15);--orange:#ffa600;--green:#28c96e;
---red:#e03c3c;--yellow:#f0c040;--t0:#000000;--t1:#1a1a1a;
---t2:#555555;--t3:#888888;--steel:#444444;
---head:'Rajdhani',sans-serif;--mono:'IBM Plex Mono',monospace;
---tech:'Share Tech Mono',monospace;
+:root {
+  --bg-dark: #000000;
+  --accent: #FF6A00;
+  --accent-glow: rgba(255, 106, 0, 0.3);
+  --text: #F1F1F2;
+  --text-muted: #A1A1A6;
+  --glass-bg: rgba(17, 17, 19, 0.65);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --panel-bg: rgba(26, 26, 30, 0.4);
 }
-*{margin:0;padding:0;box-sizing:border-box;}
-html,body{height:100vh;overflow:hidden;background:var(--bg);color:var(--t1);font-family:var(--head);}
-body{display:flex;flex-direction:column;}
-::-webkit-scrollbar{width:5px;}
-::-webkit-scrollbar-track{background:var(--bg);}
-::-webkit-scrollbar-thumb{background:var(--b1);}
-/* TOP BAR */
-#topbar{height:44px;background:var(--panel);border-bottom:1px solid var(--b0);display:flex;align-items:center;justify-content:space-between;padding:0 14px;flex-shrink:0;z-index:50;}
-.logo{display:flex;align-items:center;gap:8px;}
-.logo svg{width:22px;height:22px;}
-.logo-text{font-family:var(--head);font-weight:700;font-size:15px;color:var(--t0);letter-spacing:2px;}
-.logo-badge{background:var(--blue);color:#fff;font-size:9px;padding:2px 6px;font-weight:600;letter-spacing:1px;font-family:var(--head);}
-.subtitle{font-family:var(--mono);font-size:10px;color:var(--t2);letter-spacing:2px;text-transform:uppercase;}
-.top-btns{display:flex;gap:6px;}
-.tbtn{height:30px;padding:0 12px;background:var(--card);border:1px solid var(--b0);color:var(--t2);font-family:var(--head);font-size:11px;font-weight:600;letter-spacing:1px;cursor:pointer;display:flex;align-items:center;gap:5px;text-transform:uppercase;}
-.tbtn:hover{border-color:var(--blue);color:var(--t1);background:var(--hover);}
-.tbtn.primary{background:var(--blue);border-color:var(--blue);color:#fff;}
-.tbtn.primary:hover{background:#3a8fff;}
-/* MAIN */
-#main{flex:1;display:grid;grid-template-columns:1fr 336px;overflow:hidden;min-height:0;}
-/* VIEWPORT */
-#viewport{position:relative;background:#f0f2f5;overflow:hidden;cursor:crosshair;}
-#viewport canvas{display:block;width:100%;height:100%;}
-.scanline{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.03) 3px,rgba(0,0,0,0.03) 4px);z-index:5;}
-.cad-corner{position:absolute;width:18px;height:18px;pointer-events:none;z-index:6;}
-.cad-corner.tl{top:8px;left:8px;border-top:2px solid var(--b1);border-left:2px solid var(--b1);}
-.cad-corner.tr{top:8px;right:8px;border-top:2px solid var(--b1);border-right:2px solid var(--b1);}
-.cad-corner.bl{bottom:8px;left:8px;border-bottom:2px solid var(--b1);border-left:2px solid var(--b1);}
-.cad-corner.br{bottom:8px;right:8px;border-bottom:2px solid var(--b1);border-right:2px solid var(--b1);}
-/* LOADER */
-#loader{position:absolute;inset:0;z-index:100;background:#f0f2f5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;}
-.spin{width:36px;height:36px;border:2px solid var(--b1);border-top-color:var(--blue);border-radius:50%;animation:sp 0.8s linear infinite;}
-@keyframes sp{to{transform:rotate(360deg)}}
-#loader span{font-family:var(--mono);font-size:10px;color:var(--t2);letter-spacing:3px;}
-/* VIEWPORT TOOLBAR */
-.vtbar{position:absolute;top:10px;left:10px;display:flex;flex-direction:column;gap:4px;z-index:10;pointer-events:auto;}
-.vbtn{width:32px;height:32px;background:rgba(255,255,255,0.8);backdrop-filter:blur(6px);border:1px solid var(--b1);color:var(--t2);font-family:var(--head);font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;}
-.vbtn:hover{border-color:var(--blue);color:var(--blue);box-shadow:0 0 8px var(--bglow);}
-/* VIEWPORT TOGGLES */
-.vtogsbar{position:absolute;top:10px;right:10px;display:flex;flex-direction:column;gap:4px;z-index:10;}
-.vtog{display:flex;align-items:center;gap:6px;padding:3px 10px 3px 8px;background:rgba(255,255,255,0.8);backdrop-filter:blur(6px);border:1px solid var(--b0);cursor:pointer;user-select:none;}
-.vtog .dot{width:6px;height:6px;background:var(--t3);flex-shrink:0;}
-.vtog .vlbl{font-family:var(--mono);font-size:9px;color:var(--t2);letter-spacing:1px;text-transform:uppercase;}
-.vtog.on{border-color:var(--blue);background:var(--bglow);}
-.vtog.on .dot{background:var(--blue);box-shadow:0 0 5px var(--blue);}
-.vtog.on .vlbl{color:var(--t1);}
-/* PART LABEL */
-#partLabel{position:absolute;z-index:15;pointer-events:none;background:rgba(255,255,255,0.95);border-left:3px solid var(--blue);padding:5px 10px;font-family:var(--mono);font-size:10px;color:var(--t0);opacity:0;transition:opacity 0.15s;white-space:nowrap;box-shadow:0 0 10px rgba(0,0,0,0.1);}
-/* MATERIAL BADGE */
-#matbadge{position:absolute;bottom:36px;left:10px;pointer-events:none;z-index:10;font-family:var(--mono);font-size:9px;color:var(--steel);letter-spacing:1px;background:rgba(255,255,255,0.85);padding:3px 10px;border:1px solid var(--b0);box-shadow:0 0 10px rgba(0,0,0,0.1);}
-/* STATUS BAR */
-#statusbar{position:absolute;bottom:0;left:0;right:0;height:24px;background:rgba(255,255,255,0.9);border-top:1px solid var(--b0);display:flex;align-items:center;justify-content:space-between;padding:0 10px;pointer-events:none;z-index:10;}
-#statusbar span{font-family:var(--mono);font-size:9px;color:var(--t3);letter-spacing:1px;}
-.stval{color:var(--t2)!important;}
-/* DIM CANVAS */
-#dimCv{position:absolute;inset:0;z-index:8;pointer-events:none;}
-/* CONFIG PANEL */
-#cfgpanel{background:var(--panel);border-left:1px solid var(--b0);display:flex;flex-direction:column;overflow:hidden;}
-.cfg-head{padding:10px 14px;border-bottom:1px solid var(--b0);display:flex;align-items:center;justify-content:space-between;}
-.cfg-head h2{font-family:var(--head);font-size:14px;font-weight:700;color:var(--t0);letter-spacing:2px;text-transform:uppercase;}
-.step-badge{font-family:var(--mono);font-size:10px;color:var(--blue);background:var(--bglow);padding:2px 8px;border:1px solid var(--bdim);}
-/* STEP PILLS */
-.spills{display:flex;gap:3px;padding:8px 14px;border-bottom:1px solid var(--b0);}
-.sp{width:28px;height:22px;background:var(--card);border:1px solid var(--b0);color:var(--t3);font-family:var(--mono);font-size:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:500;}
-.sp.active{background:var(--blue);border-color:var(--blue);color:#fff;}
-.sp.done{border-color:var(--green);color:var(--green);background:rgba(40,201,110,0.08);}
-/* STEPS CONTAINER */
-.steps{flex:1;overflow-y:auto;padding:10px 14px;}
-.sb{display:none;}
-.sb.active{display:block;}
-.sb-num{font-family:var(--mono);font-size:9px;color:var(--blue);letter-spacing:1px;margin-bottom:2px;}
-.sb h3{font-family:var(--head);font-size:14px;font-weight:700;color:var(--t0);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;}
-.sb .sdesc{font-family:var(--mono);font-size:10px;color:var(--t2);margin-bottom:10px;line-height:1.5;}
-/* RADIO CARDS */
-.rcgrid{display:grid;gap:5px;}
-.rcgrid.c2{grid-template-columns:1fr 1fr;}
-.rcgrid.c3{grid-template-columns:1fr 1fr 1fr;}
-.rc{background:var(--card);border:1px solid var(--b0);padding:8px 10px;cursor:pointer;position:relative;}
-.rc:hover{border-color:var(--b1);background:var(--hover);}
-.rc.sel{border-color:var(--blue);background:var(--bglow);}
-.rcdot{width:6px;height:6px;background:var(--t3);position:absolute;top:8px;right:8px;}
-.rc.sel .rcdot{background:var(--blue);box-shadow:0 0 5px var(--blue);}
-.rc-label{font-family:var(--head);font-size:12px;font-weight:600;color:var(--t0);letter-spacing:1px;}
-.rc-sub{font-family:var(--mono);font-size:9px;color:var(--t2);margin-top:2px;line-height:1.4;}
-.rc-sub2{font-family:var(--mono);font-size:9px;color:var(--t3);}
-/* FORM CONTROLS */
-.fg{margin-bottom:10px;}
-.fg label{display:block;font-family:var(--head);font-size:10px;font-weight:600;color:var(--t2);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;}
-.fg select,.fg input[type=text]{width:100%;height:30px;background:var(--card);border:1px solid var(--b1);color:var(--t1);font-family:var(--mono);font-size:11px;padding:0 8px;outline:none;-webkit-appearance:none;appearance:none;}
-.fg select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%237a8499'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;padding-right:24px;}
-.fg select:hover,.fg select:focus,.fg input:hover,.fg input:focus{border-color:var(--blue);}
-.fg select option{background:var(--card);color:var(--t1);}
-/* RANGE */
-.rg{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
-.rg input[type=range]{flex:1;height:3px;accent-color:var(--blue);background:var(--b1);-webkit-appearance:none;appearance:none;outline:none;}
-.rg input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;background:var(--blue);border:none;cursor:pointer;}
-.rg .rv{font-family:var(--tech);font-size:12px;color:var(--blue);min-width:42px;text-align:right;}
-/* VALIDATION BOX */
-.vbox{display:none;font-family:var(--mono);font-size:10px;line-height:1.5;padding:6px 10px;margin:8px 0;border-left:3px solid var(--b1);}
-.vbox.err{display:block;border-color:var(--red);color:var(--red);background:rgba(224,60,60,0.06);}
-.vbox.warn{display:block;border-color:var(--yellow);color:var(--yellow);background:rgba(240,192,64,0.06);}
-.vbox.info{display:block;border-color:var(--blue);color:var(--steel);background:var(--bglow);}
-.vbox.ok{display:block;border-color:var(--green);color:var(--green);background:rgba(40,201,110,0.06);}
-/* NAV BUTTONS */
-.navbtns{display:flex;gap:6px;margin-top:12px;}
-.navbtns button{flex:1;height:32px;border:1px solid var(--b0);font-family:var(--head);font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;cursor:pointer;}
-.bb{background:var(--card);color:var(--t2);}
-.bb:hover{background:var(--hover);border-color:var(--b1);color:var(--t1);}
-.nb{background:var(--blue);border-color:var(--blue);color:#fff;}
-.nb:hover{background:#3a8fff;}
-.gb{background:var(--green);border-color:var(--green);color:#fff;}
-.gb:hover{background:#33d47a;}
-/* GLB UPLOAD */
-.glbzone{border:2px dashed var(--b1);padding:18px;text-align:center;margin-top:10px;cursor:pointer;transition:border-color 0.2s,background 0.2s;}
-.glbzone:hover,.glbzone.drag{border-color:var(--blue);background:var(--bglow);}
-.glbzone .gz-icon{font-size:22px;color:var(--t3);margin-bottom:4px;}
-.glbzone .gz-title{font-family:var(--head);font-size:10px;font-weight:600;color:var(--t2);letter-spacing:1px;text-transform:uppercase;}
-.glbzone .gz-sub{font-family:var(--mono);font-size:9px;color:var(--t3);margin-top:2px;}
-.glb-ok{display:none;font-family:var(--mono);font-size:10px;color:var(--green);margin-top:6px;}
-/* BOTTOM DATASHEET */
-#datasheet{height:148px;background:var(--panel);border-top:1px solid var(--b0);display:grid;grid-template-columns:1fr 1fr;padding:10px 14px;gap:10px;flex-shrink:0;overflow:hidden;}
-.ds-left{display:grid;grid-template-columns:repeat(7,1fr);grid-template-rows:1fr 1fr;gap:4px;}
-.dsc{background:var(--card);border:1px solid var(--b0);padding:5px 8px;display:flex;flex-direction:column;justify-content:center;}
-.dsc .dl{font-family:var(--head);font-size:8px;font-weight:600;color:var(--t3);letter-spacing:1px;text-transform:uppercase;}
-.dsc .dv{font-family:var(--tech);font-size:13px;color:var(--t0);margin-top:1px;}
-.dsc .du{font-family:var(--mono);font-size:8px;color:var(--t2);}
-.ds-right{display:flex;flex-direction:column;justify-content:center;gap:4px;}
-#dscode{font-family:var(--tech);font-size:11px;color:var(--orange);letter-spacing:1px;word-break:break-all;}
-#dspart{font-family:var(--mono);font-size:10px;color:var(--t3);}
-#dspart.final{color:var(--green);}
-.dstags{display:flex;flex-wrap:wrap;gap:3px;margin-top:4px;}
-.dtag{font-family:var(--mono);font-size:8px;padding:1px 6px;border:1px solid var(--b0);color:var(--t2);}
-.dtag.hi{border-color:var(--blue);color:var(--blue);background:var(--bglow);}
-/* INTRO SCREEN */
-#introScreen{position:fixed;inset:0;z-index:9999;background:rgba(255,255,255,0.95);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;}
-.intro-card{background:var(--panel);border:1px solid var(--blue);box-shadow:0 0 25px rgba(43,127,255,0.15);padding:40px;width:480px;text-align:center;display:flex;flex-direction:column;gap:18px;}
-.intro-title{font-family:var(--head);font-size:24px;color:var(--t0);font-weight:700;letter-spacing:2px;text-transform:uppercase;}
-.intro-sub{font-family:var(--mono);font-size:12px;color:var(--t2);line-height:1.6;}
-.intro-btn{padding:14px;border:1px solid var(--blue);background:rgba(43,127,255,0.1);color:var(--t0);font-family:var(--head);font-size:14px;font-weight:600;letter-spacing:1px;cursor:pointer;transition:all 0.2s;text-transform:uppercase;display:flex;align-items:center;justify-content:center;gap:10px;}
-.intro-btn:hover{background:var(--blue);color:#fff;}
-.intro-btn.alt{border-color:var(--b0);background:var(--card);color:var(--t2);}
-.intro-btn.alt:hover{border-color:var(--blue);color:var(--t1);}
-#introStatus{font-family:var(--mono);font-size:11px;color:var(--green);margin-top:4px;}
+* { margin:0; padding:0; box-sizing:border-box; font-family: 'Inter', sans-serif; }
+body { background: var(--bg-dark); color: var(--text); overflow: hidden; height: 100vh; }
+
+/* 3D FULLSCREEN BACKGROUND */
+#center-panel { position: absolute; inset: 0; z-index: 1; cursor: grab; background: radial-gradient(circle at 50% 50%, #15151A 0%, #000000 100%); }
+#center-panel:active { cursor: grabbing; }
+
+/* GLASSMORPHISM PANELS */
+.glass-panel {
+  position: absolute;
+  background: var(--glass-bg);
+  backdrop-filter: blur(34px);
+  -webkit-backdrop-filter: blur(34px);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 30px 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.1);
+  border-radius: 24px;
+  z-index: 10;
+  display: flex; flex-direction: column; overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+#left-panel { top: 20px; left: 20px; bottom: 20px; width: 360px; }
+#right-panel { top: 20px; right: 20px; width: 320px; max-height: calc(100vh - 40px); }
+
+/* PANEL CONTENT STYLING */
+.panel-header {
+  padding: 18px 24px; background: rgba(0,0,0,0.2); border-bottom: 1px solid var(--glass-border);
+  font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: #fff;
+}
+.panel-body { overflow-y: auto; flex: 1; padding: 10px; }
+
+/* LOGO */
+.logo-row { display: flex; align-items: center; gap: 10px; }
+.logo-icon { width: 20px; height: 20px; stroke: var(--accent); }
+
+/* TREE ACCORDION */
+details { border: 1px solid transparent; border-radius: 12px; margin-bottom: 4px; overflow: hidden; transition: background 0.2s; }
+summary {
+  padding: 14px 16px; cursor: pointer; font-size: 13px; font-weight: 600; color: #fff;
+  display: flex; align-items: center; justify-content: space-between; list-style: none; user-select: none;
+}
+summary::-webkit-details-marker { display: none; }
+summary:hover { background: rgba(255,255,255,0.05); }
+summary::after {
+  content: "+"; font-size: 18px; font-weight: 300; transition: transform 0.3s; color: var(--text-muted);
+}
+details[open] { background: var(--panel-bg); border-color: var(--glass-border); }
+details[open] summary::after { transform: rotate(45deg); color: var(--accent); }
+
+.tree-content { padding: 0 16px 16px 16px; display: flex; flex-direction: column; gap: 14px; }
+
+/* ENHANCED INPUTS */
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-group label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 500; }
+select, input[type=number], input[type=text] {
+  width: 100%; padding: 10px 14px; background: rgba(0,0,0,0.4); border: 1px solid var(--glass-border);
+  border-radius: 10px; color: #fff; font-size: 13px; outline: none; transition: all 0.2s;
+  box-shadow: inset 0 2px 5px rgba(0,0,0,0.2);
+}
+select {
+  appearance: none; cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23A1A1A6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 14px center;
+}
+select:hover, input:hover, select:focus, input:focus { border-color: var(--accent); background: rgba(0,0,0,0.6); }
+select option { background: #1a1a20; color: #fff; }
+
+/* HOVER LABEL & TOAST */
+#hover-label {
+  position: absolute; display: none; pointer-events: none; z-index: 20;
+  background: var(--glass-bg); backdrop-filter: blur(10px); border-radius: 8px; border: 1px solid var(--glass-border);
+  padding: 8px 12px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #fff; box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+}
+#toast {
+  position: fixed; top: 30px; left: 50%; transform: translateX(-50%) translateY(-50px);
+  background: var(--glass-bg); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); 
+  color: #fff; padding: 12px 24px; border-radius: 30px; font-weight: 600; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  font-size: 12px; opacity: 0; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); z-index: 100;
+  display: flex; align-items: center; gap: 10px;
+}
+#toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+/* RIGHT PANEL: LIVE SPECS */
+.spec-box { flex: 1; overflow-y: auto; padding: 20px 24px; }
+.spec-section { margin-bottom: 24px; }
+.spec-title { font-size: 10px; color: var(--text-muted); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 2px; font-weight: 600;}
+.spec-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 12px; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 6px;}
+.spec-row .lbl { color: #fff; }
+.spec-row .val { color: var(--accent); font-family: 'IBM Plex Mono', monospace; }
+
+.action-btns { padding: 20px; border-top: 1px solid var(--glass-border); background: rgba(0,0,0,0.2); display: flex; flex-direction: column; gap: 10px; }
+.btn {
+  width: 100%; padding: 12px; border: 1px solid var(--glass-border); border-radius: 12px;
+  background: rgba(255,255,255,0.05); color: #fff; font-size: 12px; font-weight: 600; cursor: pointer;
+  transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.3); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; box-shadow: 0 4px 15px var(--accent-glow); }
+.btn.primary:hover { background: #E65A00; box-shadow: 0 6px 20px rgba(255,106,0,0.4); transform: translateY(-1px); }
+
+/* CENTER BOTTOM PILL (ADVANCED TOUCH) */
+.adv-pill {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 10;
+  background: var(--glass-bg); backdrop-filter: blur(24px); border: 1px solid var(--glass-border);
+  border-radius: 40px; padding: 6px; display: flex; gap: 5px; box-shadow: 0 15px 30px rgba(0,0,0,0.5);
+}
+.pill-btn {
+  padding: 10px 18px; border: none; background: transparent; border-radius: 30px; font-size: 12px;
+  font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all 0.2s;
+}
+.pill-btn:hover { background: rgba(255,255,255,0.05); color: #fff; }
+.pill-btn.active { background: var(--text); color: #000; }
+
+#dim-canvas { position: absolute; inset: 0; pointer-events: none; z-index: 5; }
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.4); }
 </style>
 </head>
 <body>
-<!-- INTRO SCREEN -->
-<div id="introScreen">
-  <div class="intro-card">
-    <div style="display:flex;justify-content:center;margin-bottom:10px;">
-      <svg viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" style="width:48px;height:48px;"><polygon points="12,2 22,8.5 22,15.5 12,22 2,15.5 2,8.5"/><line x1="12" y1="2" x2="12" y2="22"/><line x1="2" y1="8.5" x2="22" y2="8.5"/></svg>
+
+<div id="toast"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg><span id="toast-msg">Success</span></div>
+
+<!-- LEFT PANEL: FEATURE MANAGER -->
+<div id="left-panel" class="glass-panel">
+  <div class="panel-header">
+    <div class="logo-row">
+      <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke-width="2.5"><polygon points="12,2 22,8.5 22,15.5 12,22 2,15.5 2,8.5"/><line x1="12" y1="2" x2="12" y2="22"/><line x1="2" y1="8.5" x2="22" y2="8.5"/></svg>
+      TEMPSENS PRO
     </div>
-    <div class="intro-title">TEMPSENS PRO CONFIGURATOR</div>
-    <div class="intro-sub">Upload a PDF or DOCX specification sheet to auto-fill the configurator parameters, or begin editing manually.</div>
-    <button class="intro-btn" onclick="document.getElementById('specInput').click()">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-      UPLOAD PDF/WORD
+  </div>
+  
+  <div class="panel-body">
+    <details open>
+      <summary>1. Sensor Base</summary>
+      <div class="tree-content">
+        <div class="form-group"><label>Sensing Family</label>
+          <select id="inp-family" onchange="toggleRTD(); upd('family',this.value);">
+            <option value="TC">Thermocouple (TC)</option>
+            <option value="RTD">RTD (Resistance Temp Detector)</option>
+          </select>
+        </div>
+      </div>
+    </details>
+
+    <details open>
+      <summary>2. Element Spec</summary>
+      <div class="tree-content">
+        <!-- TC Specific -->
+        <div class="form-group tc-only"><label>TC Type</label>
+          <select onchange="upd('tcType',this.value)">
+            <option value="K">Type K</option><option value="J">Type J</option><option value="T">Type T</option>
+            <option value="E">Type E</option><option value="N">Type N</option><option value="R">Type R</option>
+            <option value="S">Type S</option><option value="B">Type B</option><option value="C">Type C</option>
+          </select>
+        </div>
+        <div class="form-group tc-only"><label>TC Accuracy</label>
+          <select onchange="upd('tcAcc',this.value)"><option value="Standard">Standard</option><option value="Special">Special</option></select>
+        </div>
+        <!-- RTD Specific -->
+        <div class="form-group rtd-only" style="display:none;"><label>RTD Element Type</label>
+          <select onchange="upd('rtdType',this.value)">
+            <option value="Pt100">Pt100</option><option value="Pt200">Pt200</option>
+            <option value="Pt500">Pt500</option><option value="Pt1000">Pt1000</option><option value="Cu50">Cu50</option>
+          </select>
+        </div>
+        <div class="form-group rtd-only" style="display:none;"><label>RTD Connection (Wires)</label>
+          <select onchange="upd('rtdWire',this.value)">
+            <option value="3-Wire">3-Wire (Standard)</option><option value="4-Wire">4-Wire (High Accuracy)</option><option value="2-Wire">2-Wire</option>
+          </select>
+        </div>
+        <div class="form-group rtd-only" style="display:none;"><label>RTD Accuracy Class</label>
+          <select onchange="upd('rtdAcc',this.value)">
+            <option value="Class A">Class A</option><option value="Class B">Class B</option>
+            <option value="1/3 DIN">1/3 DIN</option><option value="1/10 DIN">1/10 DIN</option>
+          </select>
+        </div>
+        <div class="form-group rtd-only" style="display:none;"><label>Element Construction</label>
+          <select onchange="upd('rtdConst',this.value)">
+            <option value="Thin Film">Thin Film</option><option value="Wire Wound (Ceramic)">Wire Wound (Ceramic)</option>
+          </select>
+        </div>
+      </div>
+    </details>
+
+    <details>
+      <summary>3. Construction</summary>
+      <div class="tree-content">
+        <div class="form-group"><label>Configuration</label>
+          <select onchange="upd('config',this.value)"><option value="Simplex">Simplex</option><option value="Duplex">Duplex</option><option value="Triplex">Triplex</option></select>
+        </div>
+        <div class="form-group"><label>Assembly Type</label>
+          <select onchange="upd('build',this.value)"><option value="MI Cable">MI Cable</option><option value="Tube & Wire">Tube & Wire</option></select>
+        </div>
+      </div>
+    </details>
+
+    <details open>
+      <summary>4. Sheath & Geometry</summary>
+      <div class="tree-content">
+        <div class="form-group"><label>Material</label>
+          <select onchange="upd('sheath',this.value)">
+            <option value="SS316">SS316</option><option value="SS310">SS310</option>
+            <option value="Inconel 600">Inconel 600</option><option value="Hastelloy">Hastelloy</option>
+            <option value="Titanium">Titanium</option><option value="Ceramic">Ceramic Series</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Diameter (Ø mm)</label>
+          <input type="number" value="6" step="0.5" onchange="upd('dia',this.value)">
+        </div>
+        <div class="form-group"><label>Overall Length (L mm)</label>
+          <input type="number" value="300" step="10" onchange="upd('len',this.value)">
+        </div>
+      </div>
+    </details>
+
+    <details>
+      <summary>5. Thermowell</summary>
+      <div class="tree-content">
+        <div class="form-group"><label>Type</label>
+          <select onchange="upd('twellType',this.value)"><option value="None">None</option><option value="Straight">Straight</option><option value="Tapered">Tapered</option><option value="Stepped">Stepped</option></select>
+        </div>
+        <div class="form-group"><label>Material</label>
+          <select onchange="upd('twellMat',this.value)"><option value="SS316">SS316</option><option value="Hastelloy">Hastelloy</option><option value="Inconel">Inconel</option></select>
+        </div>
+      </div>
+    </details>
+
+    <details open>
+      <summary>6. Process Connection</summary>
+      <div class="tree-content">
+        <div class="form-group"><label>Fitting Protocol</label>
+          <select onchange="upd('connType',this.value)">
+            <option value="none">None</option><option value="compression" selected>Compression Fitting</option>
+            <option value="thread">Threaded Unit</option><option value="flange">Flanged</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Thread / Bore Size</label>
+          <select onchange="upd('connSize',this.value)"><option value="1/2\" NPT">1/2" NPT</option><option value="3/4\" NPT">3/4" NPT</option><option value="1\" NPT">1" NPT</option><option value="ANSI 150">ANSI 150#</option></select>
+        </div>
+        <div class="form-group"><label>Immersion (U mm)</label>
+          <input type="number" value="250" step="10" onchange="upd('imm',this.value)">
+        </div>
+      </div>
+    </details>
+
+    <details open>
+      <summary>7. Head & Transmitter</summary>
+      <div class="tree-content">
+        <div class="form-group"><label>Head Enclosure</label>
+          <select onchange="upd('headType',this.value)">
+            <option value="A">Type A</option><option value="B">Type B</option>
+            <option value="ExD">Flameproof Ex d</option><option value="DNAG">DNAG</option>
+            <option value="None">None (Bare / Fly leads)</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Transmitter System</label>
+          <select onchange="upd('transm',this.value)"><option value="None">Direct Wire (None)</option><option value="Head Mounted">Head Mounted</option><option value="DIN Rail">DIN Rail</option></select>
+        </div>
+      </div>
+    </details>
+
+    <details>
+      <summary>8. Output & Specials</summary>
+      <div class="tree-content">
+        <div class="form-group"><label>Cable Extension</label>
+          <select onchange="upd('cable',this.value)"><option value="None">None</option><option value="Compensating">Compensating (PVC)</option><option value="PTFE">PTFE Insulated</option><option value="Armored">SS Armored</option></select>
+        </div>
+        <div class="form-group"><label>Signal Out</label>
+          <select onchange="upd('output',this.value)"><option value="Raw">Raw Output</option><option value="4-20mA">4-20 mA</option><option value="HART">HART Protocol</option></select>
+        </div>
+      </div>
+    </details>
+  </div>
+</div>
+
+<!-- CENTER BOTTOM: ADVANCED TOUCH PILL -->
+<div class="adv-pill">
+  <button class="pill-btn active" onclick="togPill(this); togDims(true)">CAD VIEW</button>
+  <button class="pill-btn" onclick="togPill(this); togExplode()">EXPLODED VIEW</button>
+  <button class="pill-btn" onclick="triggerAR()">AR PREVIEW</button>
+</div>
+
+<!-- CENTER PANEL: 3D VIEWPORT -->
+<div id="center-panel">
+  <div id="viewport" style="position:absolute; inset:0; z-index:1;"></div>
+  <canvas id="dim-canvas"></canvas>
+  <div id="hover-label"></div>
+</div>
+
+<!-- RIGHT PANEL: LIVE SPECS -->
+<div id="right-panel" class="glass-panel">
+  <div class="panel-header">Configuration Snapshot</div>
+  
+  <div class="spec-box">
+    <div class="spec-section">
+      <div class="spec-title">Element Dynamics</div>
+      <div class="spec-row"><span class="lbl">Format</span><span class="val" id="sp-fam">Thermocouple</span></div>
+      <div class="spec-row"><span class="lbl">Active Type</span><span class="val" id="sp-type">K Type</span></div>
+      <div class="spec-row"><span class="lbl">Class</span><span class="val" id="sp-acc">Standard</span></div>
+    </div>
+    <div class="spec-section">
+      <div class="spec-title">Enclosure Geometry</div>
+      <div class="spec-row"><span class="lbl">Material</span><span class="val" id="sp-sheath">SS316</span></div>
+      <div class="spec-row"><span class="lbl">Diameter</span><span class="val" id="sp-dia">6.0 mm</span></div>
+      <div class="spec-row"><span class="lbl">Total L</span><span class="val" id="sp-len">300 mm</span></div>
+    </div>
+    <div class="spec-section">
+      <div class="spec-title">Hardware</div>
+      <div class="spec-row"><span class="lbl">Process Conn</span><span class="val" id="sp-conn">Compression</span></div>
+      <div class="spec-row"><span class="lbl">Immers U</span><span class="val" id="sp-imm">250 mm</span></div>
+      <div class="spec-row"><span class="lbl">Terminal</span><span class="val" id="sp-head">Type A</span></div>
+    </div>
+    <div class="spec-section">
+      <div class="spec-title">Link</div>
+      <input type="text" value="tempsens.com/ctg?id=b9xf2" readonly style="font-family:'IBM Plex Mono'; font-size:10px; color:var(--text-muted); background:rgba(0,0,0,0.5); text-align:center; cursor:pointer;" onclick="copyLink(this)">
+    </div>
+  </div>
+
+  <div class="action-btns">
+    <button class="btn" onclick="genGA()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20v-6M6 20V10M18 20V4"/></svg> GA Drawing
     </button>
-    <button class="intro-btn alt" onclick="startManual()">START MANUALLY</button>
-    <input type="file" id="specInput" accept=".pdf,.docx,.doc,.txt" style="display:none" onchange="handleSpecUpload(event)">
-    <div id="introStatus"></div>
+    <button class="btn" onclick="addRFQ()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg> Add to RFQ
+    </button>
+    <button class="btn primary" onclick="dlDatasheet()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download Spec
+    </button>
   </div>
 </div>
-<!-- TOP BAR -->
-<div id="topbar">
-  <div class="logo">
-    <svg viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><polygon points="12,2 22,8.5 22,15.5 12,22 2,15.5 2,8.5"/><line x1="12" y1="2" x2="12" y2="22"/><line x1="2" y1="8.5" x2="22" y2="8.5"/></svg>
-    <span class="logo-text">TEMPSENS PRO</span>
-    <span class="logo-badge">CONFIGURATOR</span>
-  </div>
-  <span class="subtitle">THERMOCOUPLE ASSEMBLY BUILDER v2.1</span>
-  <div class="top-btns">
-    <button class="tbtn" onclick="resetAll()">↺ RESET</button>
-    <button class="tbtn" onclick="saveConfig()">⬡ SAVE JSON</button>
-    <button class="tbtn primary" onclick="exportPDF()">↓ PDF DATASHEET</button>
-  </div>
-</div>
-<!-- MAIN -->
-<div id="main">
-  <!-- VIEWPORT -->
-  <div id="viewport">
-    <div id="loader"><div class="spin"></div><span>INITIALISING...</span></div>
-    <div class="scanline"></div>
-    <div class="cad-corner tl"></div><div class="cad-corner tr"></div>
-    <div class="cad-corner bl"></div><div class="cad-corner br"></div>
-    <canvas id="dimCv"></canvas>
-    <div id="partLabel"></div>
-    <div class="vtbar">
-      <button class="vbtn" title="Fit View" onclick="fitView()">⊕</button>
-      <button class="vbtn" title="Front View" onclick="setView(0,1.3,3.5)">F</button>
-      <button class="vbtn" title="Side View" onclick="setView(Math.PI/2,1.3,3.5)">S</button>
-      <button class="vbtn" title="Top View" onclick="setView(0,0.12,4.5)">T</button>
-      <button class="vbtn" title="ISO View" onclick="setView(0.55,1.1,4.0)">◈</button>
-    </div>
-    <div class="vtogsbar">
-      <div class="vtog" onclick="togWire(this)"><div class="dot"></div><span class="vlbl">WIREFRAME</span></div>
-      <div class="vtog on" onclick="togDims(this)"><div class="dot"></div><span class="vlbl">DIMENSIONS</span></div>
-      <div class="vtog on" onclick="togGrid(this)"><div class="dot"></div><span class="vlbl">GRID FLOOR</span></div>
-      <div class="vtog on" onclick="togLabels(this)"><div class="dot"></div><span class="vlbl">PART LABELS</span></div>
-    </div>
-    <div id="matbadge">MAT: SS316 | HEAD: TYPE-A | IP: IP65</div>
-    <div id="statusbar">
-      <span>ROT <span class="stval" id="sRot">29</span>° &nbsp; ZOOM <span class="stval" id="sZoom">1.0</span>× &nbsp; VERTS <span class="stval" id="sVerts">0</span></span>
-      <span>DRAG ROTATE · SCROLL ZOOM · HOVER PART</span>
-    </div>
-  </div>
-  <!-- CONFIG PANEL -->
-  <div id="cfgpanel">
-    <div class="cfg-head"><h2>Configuration</h2><span class="step-badge" id="stepBadge">STEP 1 / 8</span></div>
-    <div class="spills" id="pills"></div>
-    <div class="steps" id="stepsBox">
-      <!-- Steps injected by JS -->
-    </div>
-  </div>
-</div>
-<!-- BOTTOM DATASHEET -->
-<div id="datasheet">
-  <div class="ds-left">
-    <div class="dsc"><span class="dl">TYPE</span><span class="dv" id="ds-type">K</span></div>
-    <div class="dsc"><span class="dl">MAX TEMP</span><span class="dv" id="ds-mt">1260</span><span class="du">°C</span></div>
-    <div class="dsc"><span class="dl">SHEATH</span><span class="dv" id="ds-sh">SS316</span></div>
-    <div class="dsc"><span class="dl">INSERTION</span><span class="dv" id="ds-ins">150</span><span class="du">mm</span></div>
-    <div class="dsc"><span class="dl">OVERALL</span><span class="dv" id="ds-ovr">280</span><span class="du">mm</span></div>
-    <div class="dsc"><span class="dl">DIA</span><span class="dv" id="ds-dia">6</span><span class="du">mm</span></div>
-    <div class="dsc"><span class="dl">ACCURACY</span><span class="dv" id="ds-acc">±2.5°C</span></div>
-    <div class="dsc"><span class="dl">RESPONSE</span><span class="dv" id="ds-resp">0.3</span><span class="du">s</span></div>
-    <div class="dsc"><span class="dl">MOUNT</span><span class="dv" id="ds-mnt" style="font-size:10px;">FIXED</span></div>
-    <div class="dsc"><span class="dl">CONN.</span><span class="dv" id="ds-conn">½" NPT</span></div>
-    <div class="dsc"><span class="dl">HEAD</span><span class="dv" id="ds-head" style="font-size:11px;">TYPE A</span></div>
-    <div class="dsc"><span class="dl">IP CLASS</span><span class="dv" id="ds-ip">IP65</span></div>
-    <div class="dsc"><span class="dl">CABLE</span><span class="dv" id="ds-cable">2.0m</span></div>
-    <div class="dsc"><span class="dl">STD</span><span class="dv">IEC584</span></div>
-  </div>
-  <div class="ds-right">
-    <div id="dscode">TSE-K-SS316-6D-150IL-½NPT-A-2M</div>
-    <div id="dspart">PART# —</div>
-    <div class="dstags" id="dstags"></div>
-  </div>
-</div>
+
 <script>
-const S={step:1,type:'K',sheath:'SS316',dia:6,ins:150,overall:280,junction:'grounded',head:'A',cable:'comp',cableShield:'unshielded',cableLen:2.0,mount:'fixed',conn:'npt',threadSize:'1/2',wireframe:false,dims:true,grid:true,labels:true};
-const TD={K:{mt:1260,acc:'±2.5°C',resp:0.3},J:{mt:750,acc:'±2.5°C',resp:0.3},T:{mt:350,acc:'±1.0°C',resp:0.2},N:{mt:1300,acc:'±2.5°C',resp:0.4},R:{mt:1480,acc:'±1.5°C',resp:0.8},S:{mt:1480,acc:'±1.5°C',resp:0.8}};
-const TYPE_EMISSIVE={K:0x001122,J:0x110800,T:0x001108,N:0x080012,R:0x110000,S:0x110800};
-const SHEATH_MAT={SS316:{col:0x7a9ab8,rough:0.34},SS310:{col:0x8aacba,rough:0.37},INC600:{col:0x9a8e78,rough:0.43},HAST:{col:0x7a8870,rough:0.46}};
-const HEAD_MAT={none:{col:0x252830,rough:0.75,ip:'IP00'},A:{col:0x607888,rough:0.52,ip:'IP65'},B:{col:0x4a5a66,rough:0.65,ip:'IP67'},C:{col:0x3a4850,rough:0.72,ip:'Ex d IIB'},D:{col:0x586878,rough:0.55,ip:'IP54'},E:{col:0x607888,rough:0.52,ip:'IP65'}};
-const CONN_DATA={npt:{label:'½" NPT',psi:'3000 PSI',col:0x8aacc0,rough:0.28,sx:1,sz:1},bsp:{label:'½" BSP',psi:'3000 PSI',col:0x8aacc0,rough:0.28,sx:1,sz:1},'flange-ansi':{label:'ANSI 150/300',psi:'CLASS 150/300',col:0x9abccc,rough:0.22,sx:1.55,sz:1.35},'flange-din':{label:'DIN PN16/40',psi:'PN 16/40',col:0x9abccc,rough:0.22,sx:1.55,sz:1.35},compression:{label:'Compression',psi:'6000 PSI',col:0xaabccc,rough:0.34,sx:1,sz:1},weldin:{label:'Socket Weld-In',psi:'6000 PSI',col:0x607888,rough:0.42,sx:1,sz:1},triclamp:{label:'Tri-Clamp',psi:'150 PSI',col:0xc0d0d8,rough:0.20,sx:1.25,sz:1.25}};
-const CONN_CODE={npt:'½NPT',bsp:'½BSP','flange-ansi':'ANSI-FL','flange-din':'DIN-FL',compression:'COMPR',weldin:'WELD',triclamp:'TC'};
-const RESP_TIME={grounded:'0.3',ungrounded:'1.2',exposed:'0.08',dual:'0.3'};
+// ---------- UI STATE ----------
+const S = {
+  family: 'TC', tcType: 'K', tcAcc: 'Standard',
+  rtdType: 'Pt100', rtdWire: '3-Wire', rtdAcc: 'Class A', rtdConst: 'Thin Film',
+  config: 'Simplex', build: 'MI Cable',
+  sheath: 'SS316', dia: 6, len: 300,
+  twellType: 'None', twellMat: 'SS316',
+  connType: 'compression', connSize: '1/2" NPT', imm: 250,
+  headType: 'A', transm: 'None', cable: 'None', output: 'Raw',
+  showDims: true, exploded: false
+};
 
-let modelParts={},tcGroup=null,scene,camera,renderer,gridMesh,sPlane;
-let cableMesh=null, cableShieldMesh=null;
-let sph={th:0.5,ph:1.25,r:3.5},drag=false,mx=0,my=0;
-const raycaster=new THREE.Raycaster();
-const mouse=new THREE.Vector2();
-let hoveredMesh=null;
-const vp=document.getElementById('viewport');
-
-// Three.js setup
-scene=new THREE.Scene();
-camera=new THREE.PerspectiveCamera(38,1,0.1,100);
-renderer=new THREE.WebGLRenderer({antialias:true,alpha:false});
-renderer.outputEncoding=THREE.sRGBEncoding;
-renderer.toneMapping=THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure=1.25;
-renderer.shadowMap.enabled=true;
-renderer.shadowMap.type=THREE.PCFSoftShadowMap;
-renderer.setClearColor(0xf0f2f5);
-renderer.domElement.style.display='block';
-renderer.domElement.style.width='100%';
-renderer.domElement.style.height='100%';
-vp.insertBefore(renderer.domElement,vp.firstChild);
-
-// Lights
-const ambLight=new THREE.AmbientLight(0xffffff,0.7);scene.add(ambLight);
-const dirLight=new THREE.DirectionalLight(0xffffff,1.0);dirLight.position.set(3,6,4);dirLight.castShadow=true;dirLight.shadow.mapSize.set(1024,1024);dirLight.shadow.camera.near=0.5;dirLight.shadow.camera.far=20;dirLight.shadow.camera.left=-3;dirLight.shadow.camera.right=3;dirLight.shadow.camera.top=3;dirLight.shadow.camera.bottom=-3;scene.add(dirLight);
-const dirLight2=new THREE.DirectionalLight(0xffa600,0.3);dirLight2.position.set(-4,2,-3);scene.add(dirLight2);
-const dirLight3=new THREE.DirectionalLight(0x444444,0.3);dirLight3.position.set(0,-5,-2);scene.add(dirLight3);
-
-// Grid + Shadow plane
-gridMesh=new THREE.GridHelper(5,22,0xcccccc,0xeaeaea);gridMesh.position.y=-1.35;scene.add(gridMesh);
-const spGeo=new THREE.PlaneGeometry(8,8);const spMat=new THREE.ShadowMaterial({opacity:0.08});sPlane=new THREE.Mesh(spGeo,spMat);sPlane.rotation.x=-Math.PI/2;sPlane.position.y=-1.36;sPlane.receiveShadow=true;scene.add(sPlane);
-
-function buildProceduralModel(){
-  const group=new THREE.Group();
-  const probeGeo=new THREE.CylinderGeometry(0.04,0.04,1.5,16);
-  const probeMat=new THREE.MeshStandardMaterial({color:0x7a9ab8,metalness:0.85,roughness:0.34});
-  const probe=new THREE.Mesh(probeGeo,probeMat);probe.position.y=-0.75;probe.castShadow=true;probe.name='probe';probe.userData={label:'Thermocouple Sheath — MI Cable',baseCol:0x7a9ab8};group.add(probe);modelParts.probe=probe;
-  const fitGeo=new THREE.CylinderGeometry(0.12,0.12,0.25,6);
-  const fitMat=new THREE.MeshStandardMaterial({color:0x8aacc0,metalness:0.88,roughness:0.28});
-  const fitting=new THREE.Mesh(fitGeo,fitMat);fitting.position.y=0.0;fitting.castShadow=true;fitting.name='fitting';fitting.userData={label:'Process Connection — NPT Fitting',baseCol:0x8aacc0};group.add(fitting);modelParts.fitting=fitting;
-  const neckGeo=new THREE.CylinderGeometry(0.04,0.04,0.35,16);
-  const neckMat=new THREE.MeshStandardMaterial({color:0x7a9ab8,metalness:0.85,roughness:0.34});
-  const neck=new THREE.Mesh(neckGeo,neckMat);neck.position.y=0.28;neck.castShadow=true;neck.name='neck';neck.userData={label:'Transition Neck',baseCol:0x7a9ab8};group.add(neck);modelParts.neck=neck;
-  const colGeo=new THREE.CylinderGeometry(0.10,0.10,0.15,16);
-  const colMat=new THREE.MeshStandardMaterial({color:0x8aacc0,metalness:0.82,roughness:0.36});
-  const collar=new THREE.Mesh(colGeo,colMat);collar.position.y=0.50;collar.castShadow=true;collar.name='collar';collar.userData={label:'Cable Entry Collar',baseCol:0x8aacc0};group.add(collar);modelParts.collar=collar;
-  const headGeo=new THREE.BoxGeometry(0.38,0.42,0.28);
-  const headMat=new THREE.MeshStandardMaterial({color:0x607888,metalness:0.75,roughness:0.52});
-  const head=new THREE.Mesh(headGeo,headMat);head.position.y=0.80;head.castShadow=true;head.name='head';head.userData={label:'Connection Head — Type A (IP65)',baseCol:0x607888};group.add(head);modelParts.head=head;
-  centerAndAddGroup(group);
-  buildCable();
-  applyConfig();
-  document.getElementById('loader').style.display='none';
-  countVerts();
+function toggleRTD() {
+  const isRTD = document.getElementById('inp-family').value === 'RTD';
+  document.querySelectorAll('.tc-only').forEach(el => el.style.display = isRTD ? 'none' : 'flex');
+  document.querySelectorAll('.rtd-only').forEach(el => el.style.display = isRTD ? 'flex' : 'none');
 }
 
-// Load the default GLB model from the same directory
-function loadDefaultGLB(){
-  const xhr=new XMLHttpRequest();
-  xhr.open('GET','model.glb',true);
-  xhr.responseType='arraybuffer';
-  xhr.onload=function(){
-    if(xhr.status===200||xhr.status===0){// status 0 = file:// protocol
-      buildFromGLB(xhr.response);
-      buildCable();
-      document.getElementById('loader').style.display='none';
-    }else{
-      console.warn('GLB load failed, using procedural model');
-      buildProceduralModel();
-    }
-  };
-  xhr.onerror=function(){
-    console.warn('Could not load model.glb, using procedural model');
-    buildProceduralModel();
-  };
-  xhr.send();
+function upd(key, val) {
+  S[key] = (key==='dia'||key==='len'||key==='imm') ? parseFloat(val) : val;
+  updateSpecs();
+  build3D();
 }
 
-// Cable visualization
-const CABLE_COLORS={comp:0x8a5533, ext:0x445566, rtd:0x336644};
-const SHIELD_COLORS={unshielded:null, shielded:0x999999, armored:0x606060};
+function updateSpecs() {
+  document.getElementById('sp-fam').textContent = S.family==='TC' ? "Thermocouple" : "RTD";
+  document.getElementById('sp-type').textContent = S.family==='TC' ? (S.tcType + " Type") : S.rtdType;
+  document.getElementById('sp-acc').textContent = S.family==='TC' ? S.tcAcc : S.rtdAcc;
+  document.getElementById('sp-sheath').textContent = S.sheath;
+  document.getElementById('sp-dia').textContent = parseFloat(S.dia).toFixed(1) + ' mm';
+  document.getElementById('sp-len').textContent = S.len + ' mm';
+  document.getElementById('sp-conn').textContent = S.connType;
+  document.getElementById('sp-imm').textContent = S.imm + ' mm';
+  document.getElementById('sp-head').textContent = S.headType!=='None' ? ('Type ' + S.headType) : 'None';
+}
 
-function buildCable(){
-  // Remove old cable
-  if(cableMesh){scene.remove(cableMesh);cableMesh=null;}
-  if(cableShieldMesh){scene.remove(cableShieldMesh);cableShieldMesh=null;}
-  if(S.head==='none' || S.cable==='none') return; // no cable
-  // Cable exits from side of head, curves away
-  const cableColor=CABLE_COLORS[S.cable]||0x8a5533;
-  const cableRadius=0.018;
-  const shieldRadius=0.026;
+function togPill(btn) {
+  document.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+}
+
+function togDims(forceOn) { 
+  if(forceOn) { S.showDims = true; S.exploded = false; }
+  else { S.showDims = !S.showDims; }
+  build3D();
+}
+
+function togExplode() {
+  S.exploded = true; S.showDims = false;
+  build3D(); // rebuild with exploded offsets
+}
+
+function triggerAR() {
+  showToast("Launching AR Core Wrapper... (Device must support WebXR)");
+  setTimeout(()=>togPill(document.querySelector('.pill-btn')), 2000);
+}
+
+function copyLink(el) {
+  el.select(); document.execCommand('copy');
+  showToast("Configuration Link Copied to Clipboard");
+}
+
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+function addRFQ() { showToast("Added configuration to RFQ Cart"); }
+
+function dlDatasheet() {
+  const doc = new window.jspdf.jsPDF('p', 'mm', 'a4');
+  doc.setFillColor(11, 11, 13); doc.rect(0, 0, 210, 297, 'F');
+  doc.setTextColor(255, 106, 0); doc.setFontSize(22); doc.setFont("helvetica", "bold");
+  doc.text('TEMPSENS PRO', 14, 25);
+  doc.setTextColor(200, 200, 200); doc.setFontSize(10); doc.setFont("helvetica", "normal");
+  doc.text('Technical Product Specification', 14, 32);
+
+  renderer.render(scene, camera); 
+  const imgData = renderer.domElement.toDataURL('image/jpeg', 0.98);
+  doc.addImage(imgData, 'JPEG', 14, 40, 180, 110);
   
-  let startX = 0.19, startY = 1.05, startZ = 0;
-  if(tcGroup){
-    if(modelParts.head){
-      const box = new THREE.Box3().setFromObject(modelParts.head);
-      startY = (box.min.y + box.max.y) / 2;
-      startX = box.max.x;
+  doc.setDrawColor(40, 40, 45); doc.setFillColor(20, 20, 22);
+  doc.rect(14, 160, 182, 115, 'FD');
+  doc.setTextColor(255, 106, 0); doc.setFontSize(14); doc.setFont("helvetica", "bold");
+  doc.text('ASSEMBLY PARAMETERS', 20, 175);
+  doc.setFontSize(9); doc.setFont("courier", "normal"); doc.setTextColor(230, 230, 230);
+  
+  let y = 185, col1 = 20, col2 = 110, yStep=7;
+  const drawRow = (x, lbl, val) => {
+    doc.setTextColor(150, 150, 150); doc.text(lbl, x, y);
+    doc.setTextColor(255, 255, 255); doc.text(String(val), x+30, y);
+  }
+
+  drawRow(col1, 'Family:', S.family);         drawRow(col2, 'Head Type:', S.headType); y+=yStep;
+  drawRow(col1, 'Type:', S.family==='TC'?S.tcType:S.rtdType); drawRow(col2, 'Transm:', S.transm); y+=yStep;
+  drawRow(col1, 'Accuracy:', S.family==='TC'?S.tcAcc:S.rtdAcc); drawRow(col2, 'Output:', S.output); y+=yStep;
+  if(S.family==='RTD') drawRow(col1, 'Conn:', S.rtdWire); y+=yStep;
+  drawRow(col1, 'Sheath:', S.sheath);         drawRow(col2, 'Process Con:', S.connType); y+=yStep;
+  drawRow(col1, 'Diameter:', S.dia+' mm');    drawRow(col2, 'Conn Size:', S.connSize); y+=yStep;
+  drawRow(col1, 'Length (L):', S.len+' mm');  drawRow(col2, 'Immers U:', S.imm + ' mm'); y+=yStep;
+
+  y+=15;
+  doc.setDrawColor(255, 106, 0); doc.setFillColor(30, 15, 0); doc.rect(20, y, 170, 20, 'FD');
+  doc.setFont("helvetica", "bold"); doc.setFontSize(8); doc.setTextColor(255, 106, 0);
+  doc.text('GENERATED ORDER CODE:', 25, y+7);
+  doc.setFont("courier", "bold"); doc.setFontSize(12); doc.setTextColor(255, 255, 255);
+  const code = `TS-${S.family}-${S.family==='TC'?S.tcType:S.rtdType}-${S.dia}D-${S.len}L-${S.imm}U-${S.connType.substring(0,3).toUpperCase()}-${S.headType}`;
+  doc.text(code, 25, y+15);
+  doc.save(`Datasheet_${code}.pdf`); showToast("Datasheet Generated");
+}
+
+function genGA() {
+  const doc = new window.jspdf.jsPDF('l', 'mm', 'a4');
+  doc.setFillColor(255, 255, 255); doc.rect(0, 0, 297, 210, 'F');
+  doc.setDrawColor(0, 0, 0); doc.setLineWidth(0.5);
+  doc.rect(10, 10, 277, 190); 
+  doc.rect(200, 170, 87, 30); doc.rect(200, 170, 87, 10);
+  
+  doc.setFont("helvetica", "bold"); doc.setFontSize(14); doc.setTextColor(0, 0, 0);
+  doc.text('TEMPSENS GA DRAWING', 205, 177);
+  doc.setFontSize(9); doc.setFont("helvetica", "normal");
+  doc.text(`Part: ${S.family==='TC'?S.tcType:S.rtdType} ${S.family} Assembly`, 205, 185);
+  doc.text(`Dim: ${S.dia}D x ${S.len}L mm | ${S.connType}`, 205, 192);
+
+  renderer.setClearColor(0xffffff, 1);
+  renderer.render(scene, camera);
+  const imgData = renderer.domElement.toDataURL('image/jpeg', 1.0);
+  renderer.setClearColor(0x000000, 0);
+
+  doc.addImage(imgData, 'JPEG', 50, 30, 190, 130);
+  doc.save('GA_Drawing.pdf'); showToast("GA Drawing Exported");
+}
+
+// ---------- 3D ENGINE (Apple Material Overhaul) ----------
+let scene, camera, renderer, tcGroup;
+let parts = {};
+const vp = document.getElementById('viewport');
+
+// Apple Glass/Metal Realistic Material Generation
+function getEnvMap() {
+  const cv = document.createElement('canvas'); cv.width=512; cv.height=256;
+  const ct = cv.getContext('2d');
+  const grd = ct.createLinearGradient(0,0,0,256);
+  grd.addColorStop(0,"#ffffff"); grd.addColorStop(0.5,"#222222"); grd.addColorStop(1,"#0B0B0D");
+  ct.fillStyle=grd; ct.fillRect(0,0,512,256);
+  ct.fillStyle="#ffffff"; ct.globalAlpha=0.1; ct.fillRect(0,120,512,16); // reflection band
+  const tex = new THREE.CanvasTexture(cv);
+  tex.mapping = THREE.EquirectangularReflectionMapping;
+  return tex;
+}
+
+const envTex = getEnvMap();
+const mats = {
+  SS316: new THREE.MeshStandardMaterial({ color: 0xe0e0e0, metalness: 0.95, roughness: 0.15, envMap: envTex }),
+  Inconel: new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.9, roughness: 0.25, envMap: envTex }),
+  Hastelloy: new THREE.MeshStandardMaterial({ color: 0xbbbbbb, metalness: 0.9, roughness: 0.3, envMap: envTex }),
+  Ceramic: new THREE.MeshStandardMaterial({ color: 0xfafafa, metalness: 0.05, roughness: 0.2, envMap: envTex }),
+  Alum: new THREE.MeshStandardMaterial({ color: 0x8A939C, metalness: 0.85, roughness: 0.4, envMap: envTex }),
+  Brass: new THREE.MeshStandardMaterial({ color: 0xC59A5C, metalness: 0.9, roughness: 0.2, envMap: envTex })
+};
+
+function init3D() {
+  scene = new THREE.Scene();
+  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
+  renderer.setSize(vp.clientWidth, vp.clientHeight);
+  renderer.setPixelRatio(window.devicePixelRatio);
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.2;
+  vp.appendChild(renderer.domElement);
+
+  camera = new THREE.PerspectiveCamera(32, vp.clientWidth/vp.clientHeight, 0.1, 100);
+  camera.position.set(4, 2, 6);
+
+  // Cinematic Apple Lighting
+  scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+  const key = new THREE.DirectionalLight(0xffffff, 1.5); key.position.set(5, 5, 2); scene.add(key);
+  const fill = new THREE.DirectionalLight(0xaaccff, 1.0); fill.position.set(-5, 0, 4); scene.add(fill);
+  const back = new THREE.DirectionalLight(0xFF6A00, 2.0); back.position.set(0, 3, -5); scene.add(back);
+
+  build3D(); initOrbit(); animate();
+  window.addEventListener('resize', resize); resize();
+}
+
+function build3D() {
+  if(tcGroup) scene.remove(tcGroup);
+  tcGroup = new THREE.Group(); parts = {};
+
+  const lScale = S.len / 100; const rScale = (S.dia / 6) * 0.08;
+  const expY = S.exploded ? 0.3 : 0; // Explode factor
+
+  // 1. Probe
+  const mSheath = mats[S.sheath.split(' ')[0]] || mats.SS316;
+  const probe = new THREE.Mesh(new THREE.CylinderGeometry(rScale, rScale, lScale, 32), mSheath);
+  probe.position.y = -lScale/2;
+  probe.userData.label = `Sheath (${S.sheath})`;
+  tcGroup.add(probe); parts.probe = probe;
+
+  // 2. Thermowell
+  if(S.twellType !== 'None') {
+    const twScale = rScale * 2.5; const twLen = S.imm / 100;
+    const twMat = mats[S.twellMat.split(' ')[0]] || mats.SS316;
+    const twMesh = new THREE.Mesh(new THREE.CylinderGeometry(twScale, S.twellType === 'Tapered' ? rScale*1.2 : twScale, twLen, 32), twMat);
+    twMesh.position.y = -lScale + (twLen/2) - (S.exploded ? 0.5 : 0);
+    twMesh.userData.label = `Thermowell (${S.twellType})`;
+    twMat.transparent = true; twMat.opacity = 0.6;
+    tcGroup.add(twMesh);
+  }
+
+  // 3. Process Connection
+  let fY = -lScale + (S.imm / 100) + expY;
+  if(S.connType !== 'none') {
+    const fit = new THREE.Mesh(
+      S.connType==='flange' ? new THREE.CylinderGeometry(0.5, 0.5, 0.06, 32) : new THREE.CylinderGeometry(0.18, 0.18, 0.25, 32),
+      S.connType==='compression'? mats.Brass : mats.SS316
+    );
+    fit.position.y = fY;
+    fit.userData.label = `Fitting (${S.connType})`;
+    tcGroup.add(fit); parts.conn = fit;
+  }
+
+  // 4. Head
+  if(S.headType !== 'None') {
+    const head = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.45, 32), mats.Alum);
+    head.position.y = 0.25 + expY*2;
+    head.userData.label = `Head (Type ${S.headType})`;
+    tcGroup.add(head); parts.head = head;
+  }
+
+  const box = new THREE.Box3().setFromObject(tcGroup);
+  const center = box.getCenter(new THREE.Vector3());
+  tcGroup.position.y = -center.y; 
+  scene.add(tcGroup);
+  drawDims(); 
+}
+
+// ---------- INTERACTION & DIMS ----------
+let isDragging=false, prevX=0, prevY=0;
+let camSph = { radius: 6, theta: Math.PI/4, phi: Math.PI/3 };
+
+function initOrbit() {
+  const cPan = document.getElementById('center-panel');
+  cPan.addEventListener('mousedown', e => { isDragging=true; prevX=e.clientX; prevY=e.clientY; });
+  window.addEventListener('mouseup', () => isDragging=false);
+  cPan.addEventListener('mousemove', e => {
+    if(isDragging) {
+      camSph.theta -= (e.clientX - prevX)*0.01; camSph.phi -= (e.clientY - prevY)*0.01;
+      camSph.phi = Math.max(0.1, Math.min(Math.PI-0.1, camSph.phi));
+      prevX=e.clientX; prevY=e.clientY; updateCam();
     } else {
-      const box = new THREE.Box3().setFromObject(tcGroup);
-      startY = box.max.y - 0.05;
-      startX = box.max.x;
+      doHover(e);
+      // Extra Apple Float logic
+      tcGroup.rotation.y = (e.clientX - window.innerWidth/2)*0.0001;
     }
-  }
-
-  const lenScale=Math.min(S.cableLen/2.0, 5.0); // visual scale (cap at 5m visual)
-  const pts=[
-    new THREE.Vector3(startX, startY, startZ),
-    new THREE.Vector3(startX + 0.1, startY, startZ), // Horizontal exit
-    new THREE.Vector3(startX + 0.25, startY - 0.1*lenScale, startZ + 0.1),
-    new THREE.Vector3(startX + 0.4, startY - 0.3*lenScale, startZ + 0.2),
-    new THREE.Vector3(startX + 0.55, startY - 0.6*lenScale, startZ + 0.3),
-    new THREE.Vector3(startX + 0.7, startY - 0.8*lenScale, startZ + 0.35)
-  ];
-  const curve=new THREE.CatmullRomCurve3(pts);
-  const tubeGeo=new THREE.TubeGeometry(curve,32,cableRadius,8,false);
-  const tubeMat=new THREE.MeshStandardMaterial({color:cableColor,metalness:0.15,roughness:0.75});
-  cableMesh=new THREE.Mesh(tubeGeo,tubeMat);
-  cableMesh.castShadow=true;
-  cableMesh.name='cable';
-  cableMesh.userData={label:'Extension Cable — '+S.cable.toUpperCase()+' / '+S.cableLen+'m'};
-  scene.add(cableMesh);
-  // Shield overlay if selected
-  if(S.cableShield!=='unshielded'){
-    const sColor=SHIELD_COLORS[S.cableShield]||0x999999;
-    const sGeo=new THREE.TubeGeometry(curve,32,shieldRadius,8,false);
-    const sMat=new THREE.MeshStandardMaterial({
-      color:sColor, metalness:S.cableShield==='armored'?0.80:0.50,
-      roughness:S.cableShield==='armored'?0.35:0.55,
-      transparent:true, opacity:0.4
-    });
-    cableShieldMesh=new THREE.Mesh(sGeo,sMat);
-    cableShieldMesh.castShadow=true;
-    cableShieldMesh.name='cableShield';
-    cableShieldMesh.userData={label:'Cable Shield — '+(S.cableShield==='armored'?'SS Armored':'Braided')};
-    scene.add(cableShieldMesh);
-  }
-}
-
-function centerAndAddGroup(group){
-  if(tcGroup){scene.remove(tcGroup);}
-  const box=new THREE.Box3().setFromObject(group);
-  const size=box.getSize(new THREE.Vector3());
-  const center=box.getCenter(new THREE.Vector3());
-  const sc=2.8/Math.max(size.x,size.y,size.z);
-  group.scale.setScalar(sc);
-  group.position.set(-center.x*sc,-center.y*sc-0.05,-center.z*sc);
-  scene.add(group);tcGroup=group;
-}
-
-function countVerts(){
-  let v=0;Object.values(modelParts).forEach(m=>{if(m.geometry)v+=m.geometry.attributes.position.count;});
-  document.getElementById('sVerts').textContent=v;
-}
-
-// Orbit
-const cvs=renderer.domElement;
-cvs.addEventListener('mousedown',e=>{drag=true;mx=e.clientX;my=e.clientY;});
-window.addEventListener('mouseup',()=>{drag=false;});
-cvs.addEventListener('mousemove',e=>{
-  if(drag){sph.th+=(e.clientX-mx)*0.008;sph.ph+=(e.clientY-my)*0.008;sph.ph=Math.max(0.1,Math.min(Math.PI-0.1,sph.ph));mx=e.clientX;my=e.clientY;camUpdate();}
-  else{doHover(e);}
-});
-cvs.addEventListener('wheel',e=>{e.preventDefault();sph.r+=e.deltaY*0.003;sph.r=Math.max(1.2,Math.min(9,sph.r));camUpdate();},{passive:false});
-cvs.addEventListener('touchstart',e=>{if(e.touches.length===1){drag=true;mx=e.touches[0].clientX;my=e.touches[0].clientY;}},{passive:true});
-cvs.addEventListener('touchmove',e=>{if(drag&&e.touches.length===1){const t=e.touches[0];sph.th+=(t.clientX-mx)*0.008;sph.ph+=(t.clientY-my)*0.008;sph.ph=Math.max(0.1,Math.min(Math.PI-0.1,sph.ph));mx=t.clientX;my=t.clientY;camUpdate();}},{passive:true});
-cvs.addEventListener('touchend',()=>{drag=false;},{passive:true});
-
-function camUpdate(){
-  camera.position.x=sph.r*Math.sin(sph.ph)*Math.sin(sph.th);
-  camera.position.y=sph.r*Math.cos(sph.ph);
-  camera.position.z=sph.r*Math.sin(sph.ph)*Math.cos(sph.th);
-  camera.lookAt(0,0.05,0);
-  document.getElementById('sRot').textContent=Math.round(THREE.MathUtils.radToDeg(sph.th)%360);
-  document.getElementById('sZoom').textContent=(3.5/sph.r).toFixed(1);
-  if(S.dims)drawDims();
-}
-function setView(th,ph,r){sph={th,ph,r};camUpdate();}
-function fitView(){sph={th:0.5,ph:1.25,r:3.5};camUpdate();}
-
-// Hover
-function doHover(e){
-  if(!S.labels)return;
-  const rect=cvs.getBoundingClientRect();
-  mouse.x=((e.clientX-rect.left)/rect.width)*2-1;
-  mouse.y=-((e.clientY-rect.top)/rect.height)*2+1;
-  raycaster.setFromCamera(mouse,camera);
-  const hits=raycaster.intersectObjects(Object.values(modelParts));
-  const pl=document.getElementById('partLabel');
-  if(hoveredMesh&&(!hits.length||hits[0].object!==hoveredMesh)){
-    hoveredMesh.material.emissive.setHex(hoveredMesh.name==='head'?TYPE_EMISSIVE[S.type]:0x000000);
-    hoveredMesh.material.emissiveIntensity=hoveredMesh.name==='head'?0.3:0;
-    hoveredMesh=null;pl.style.opacity='0';
-  }
-  if(hits.length){
-    const m=hits[0].object;
-    if(m!==hoveredMesh){hoveredMesh=m;m.material.emissive.setHex(0x1a4a88);m.material.emissiveIntensity=0.5;}
-    pl.textContent=m.userData.label||m.name;
-    pl.style.left=(e.clientX-rect.left+16)+'px';pl.style.top=(e.clientY-rect.top-30)+'px';pl.style.opacity='1';
-  }
-}
-
-// applyConfig
-function applyConfig(){
-  if(!modelParts.probe)return;
-  const sm=SHEATH_MAT[S.sheath]||SHEATH_MAT.SS316;
-  const hm=HEAD_MAT[S.head]||HEAD_MAT.A;
-  const cd=CONN_DATA[S.conn]||CONN_DATA.npt;
-  // Probe + Neck color
-  modelParts.probe.material.color.setHex(sm.col);modelParts.probe.material.roughness=sm.rough;
-  if(modelParts.neck){modelParts.neck.material.color.setHex(sm.col);modelParts.neck.material.roughness=sm.rough;}
-  // Diameter scale
-  const dS=S.dia/6;
-  modelParts.probe.scale.set(dS,1,dS);if(modelParts.neck)modelParts.neck.scale.set(dS,1,dS);
-  // Insertion & Overall length scale
-  if(!modelParts.probe.userData.origPosSet) {
-    if(!modelParts.probe.geometry.boundingBox) modelParts.probe.geometry.computeBoundingBox();
-    modelParts.probe.userData.origMaxY = modelParts.probe.geometry.boundingBox.max.y;
-    modelParts.probe.userData.origPosY = modelParts.probe.position.y;
-    modelParts.probe.userData.origPosSet = true;
-  }
-  const yS = (S.ins / 150) * (S.overall / 280);
-  modelParts.probe.scale.y = yS;
-  const topY = modelParts.probe.userData.origPosY + modelParts.probe.userData.origMaxY;
-  modelParts.probe.position.y = topY - (modelParts.probe.userData.origMaxY * yS);
-  // Fitting
-  if(modelParts.fitting){modelParts.fitting.material.color.setHex(cd.col);modelParts.fitting.material.roughness=cd.rough;
-  modelParts.fitting.scale.set(cd.sx,1,cd.sz);}
-  // Collar
-  if(modelParts.collar){modelParts.collar.material.color.setHex(cd.col);modelParts.collar.material.roughness=cd.rough;}
-  // Head
-  if(modelParts.head){modelParts.head.material.color.setHex(hm.col);modelParts.head.material.roughness=hm.rough;
-  modelParts.head.material.emissive.setHex(TYPE_EMISSIVE[S.type]||0);modelParts.head.material.emissiveIntensity=0.3;
-  modelParts.head.userData.label='Connection Head — Type '+(S.head==='none'?'None':S.head)+' ('+(hm.ip||'IP65')+')';
-  }
-  // Wireframe
-  Object.values(modelParts).forEach(m=>{m.material.wireframe=S.wireframe;});
-  // Update cable
-  buildCable();
-  if(cableMesh)cableMesh.material.wireframe=S.wireframe;
-  if(cableShieldMesh)cableShieldMesh.material.wireframe=S.wireframe;
-  // matbadge
-  document.getElementById('matbadge').textContent='MAT: '+S.sheath+'  |  HEAD: TYPE-'+(S.head==='none'?'NONE':S.head)+'  |  IP: '+(hm.ip||'IP65')+'  |  CABLE: '+S.cableLen+'m';
-  if(S.dims)drawDims();
-  updCode();
-}
-
-// Dimension overlay
-const dimCv=document.getElementById('dimCv');const dimCtx=dimCv.getContext('2d');
-function w2s(x,y,z){
-  const v=new THREE.Vector3(x,y,z).project(camera);
-  return{x:(v.x*0.5+0.5)*dimCv.width,y:(-v.y*0.5+0.5)*dimCv.height};
-}
-function drawDims(){
-  dimCv.width=dimCv.clientWidth;dimCv.height=dimCv.clientHeight;
-  dimCtx.clearRect(0,0,dimCv.width,dimCv.height);
-  if(!S.dims)return;
-  dimCtx.setLineDash([4,4]);dimCtx.lineWidth=1;dimCtx.font='10px "IBM Plex Mono"';
-  // Insertion length
-  const i1=w2s(0.22,-1.25,0),i2=w2s(0.22,-0.05,0);
-  dimCtx.strokeStyle='#ffa600';dimCtx.fillStyle='#ffa600';
-  dimCtx.beginPath();dimCtx.moveTo(i1.x,i1.y);dimCtx.lineTo(i2.x,i2.y);dimCtx.stroke();
-  dimCtx.beginPath();dimCtx.moveTo(i1.x-4,i1.y);dimCtx.lineTo(i1.x+4,i1.y);dimCtx.stroke();
-  dimCtx.beginPath();dimCtx.moveTo(i2.x-4,i2.y);dimCtx.lineTo(i2.x+4,i2.y);dimCtx.stroke();
-  dimCtx.setLineDash([]);dimCtx.fillText(S.ins+'mm',(i1.x+i2.x)/2+8,(i1.y+i2.y)/2-4);
-  dimCtx.font='8px "IBM Plex Mono"';dimCtx.fillStyle='rgba(255,166,0,0.7)';
-  dimCtx.fillText('INSERTION',(i1.x+i2.x)/2+8,(i1.y+i2.y)/2+8);
-  // Overall height
-  dimCtx.setLineDash([4,4]);const o1=w2s(-0.25,1.3,0),o2=w2s(-0.25,-1.25,0);
-  dimCtx.strokeStyle='rgba(0,0,0,0.7)';dimCtx.fillStyle='#000000';
-  dimCtx.beginPath();dimCtx.moveTo(o1.x,o1.y);dimCtx.lineTo(o2.x,o2.y);dimCtx.stroke();
-  dimCtx.beginPath();dimCtx.moveTo(o1.x-4,o1.y);dimCtx.lineTo(o1.x+4,o1.y);dimCtx.stroke();
-  dimCtx.beginPath();dimCtx.moveTo(o2.x-4,o2.y);dimCtx.lineTo(o2.x+4,o2.y);dimCtx.stroke();
-  dimCtx.setLineDash([]);dimCtx.font='10px "IBM Plex Mono"';
-  dimCtx.fillText(S.overall+'mm',o1.x-52,(o1.y+o2.y)/2-4);
-  dimCtx.font='8px "IBM Plex Mono"';dimCtx.fillStyle='rgba(0,0,0,0.6)';
-  dimCtx.fillText('OVERALL',o1.x-52,(o1.y+o2.y)/2+8);
-  // Diameter
-  dimCtx.setLineDash([4,4]);const d1=w2s(-0.10,-0.7,0.08),d2=w2s(0.10,-0.7,0.08);
-  dimCtx.strokeStyle='#28c96e';dimCtx.fillStyle='#28c96e';
-  dimCtx.beginPath();dimCtx.moveTo(d1.x,d1.y);dimCtx.lineTo(d2.x,d2.y);dimCtx.stroke();
-  dimCtx.setLineDash([]);dimCtx.font='10px "IBM Plex Mono"';
-  dimCtx.fillText('⌀'+S.dia+'mm',(d1.x+d2.x)/2,(d1.y+d2.y)/2-6);
-}
-
-// Toggles
-function togWire(el){S.wireframe=!S.wireframe;el.classList.toggle('on');applyConfig();}
-function togDims(el){S.dims=!S.dims;el.classList.toggle('on');if(!S.dims){dimCtx.clearRect(0,0,dimCv.width,dimCv.height);}else drawDims();}
-function togGrid(el){S.grid=!S.grid;el.classList.toggle('on');gridMesh.visible=S.grid;sPlane.visible=S.grid;}
-function togLabels(el){S.labels=!S.labels;el.classList.toggle('on');if(!S.labels)document.getElementById('partLabel').style.opacity='0';}
-
-// Resize
-function resize(){
-  const rect=vp.getBoundingClientRect();
-  renderer.setSize(rect.width,rect.height);
-  camera.aspect=rect.width/rect.height;camera.updateProjectionMatrix();
-  dimCv.width=rect.width;dimCv.height=rect.height;
-  if(S.dims)drawDims();
-}
-
-// Animate
-function animate(){requestAnimationFrame(animate);renderer.render(scene,camera);}
-
-// Step navigation
-function goStep(n){
-  S.step=n;
-  document.querySelectorAll('.sb').forEach((b,i)=>{b.classList.toggle('active',i===n-1);});
-  document.querySelectorAll('.sp').forEach((p,i)=>{
-    if(i===n-1)p.classList.add('active');else p.classList.remove('active');
   });
-  document.getElementById('stepBadge').textContent='STEP '+n+' / 8';
-}
-
-// Build pills
-(function(){
-  const pc=document.getElementById('pills');
-  for(let i=1;i<=8;i++){
-    const p=document.createElement('div');p.className='sp'+(i===1?' active':'');p.textContent=i;
-    p.onclick=()=>goStep(i);pc.appendChild(p);
-  }
-})();
-
-// Build step UI
-function buildStepsUI(){
-  const box=document.getElementById('stepsBox');
-  box.innerHTML=`
-  <!-- STEP 1 -->
-  <div class="sb active" id="s1">
-    <div class="sb-num">STEP 01</div><h3>Thermocouple Type</h3>
-    <div class="sdesc">Select sensor element type and temperature range.</div>
-    <div class="rcgrid c3" id="typeGrid"></div>
-    <div class="vbox" id="v1"></div>
-    <div class="navbtns"><button class="nb" onclick="goStep(2)">NEXT →</button></div>
-  </div>
-  <!-- STEP 2 -->
-  <div class="sb" id="s2">
-    <div class="sb-num">STEP 02</div><h3>Sheath Material</h3>
-    <div class="sdesc">Choose sheath alloy for process compatibility.</div>
-    <div class="rcgrid c2" id="sheathGrid"></div>
-    <div class="vbox" id="v2"></div>
-    <div class="navbtns"><button class="bb" onclick="goStep(1)">← BACK</button><button class="nb" onclick="goStep(3)">NEXT →</button></div>
-  </div>
-  <!-- STEP 3 -->
-  <div class="sb" id="s3">
-    <div class="sb-num">STEP 03</div><h3>Dimensions</h3>
-    <div class="sdesc">Set probe diameter and insertion length.</div>
-    <div class="fg"><label>Probe Diameter (mm)</label><div class="rg"><input type="range" min="1.5" max="12" step="0.5" value="6" oninput="S.dia=parseFloat(this.value);document.getElementById('rvDia').textContent=this.value;applyConfig();valStep3()"><span class="rv" id="rvDia">6</span></div></div>
-    <div class="fg"><label>Insertion Length (mm)</label><div class="rg"><input type="range" min="50" max="3000" step="10" value="150" oninput="S.ins=parseInt(this.value);document.getElementById('rvIns').textContent=this.value;applyConfig();valStep3()"><span class="rv" id="rvIns">150</span></div></div>
-    <div class="fg"><label>Overall Length (mm)</label><div class="rg"><input type="range" min="100" max="5000" step="10" value="280" oninput="S.overall=parseInt(this.value);document.getElementById('rvOvr').textContent=this.value;applyConfig();updCode();if(S.dims)drawDims()"><span class="rv" id="rvOvr">280</span></div></div>
-    <div class="vbox" id="v3"></div>
-    <div class="navbtns"><button class="bb" onclick="goStep(2)">← BACK</button><button class="nb" onclick="goStep(4)">NEXT →</button></div>
-  </div>
-  <!-- STEP 4 -->
-  <div class="sb" id="s4">
-    <div class="sb-num">STEP 04</div><h3>Junction Type</h3>
-    <div class="sdesc">Select sensing junction configuration.</div>
-    <div class="rcgrid c2" id="juncGrid"></div>
-    <div class="vbox" id="v4"></div>
-    <div class="navbtns"><button class="bb" onclick="goStep(3)">← BACK</button><button class="nb" onclick="goStep(5)">NEXT →</button></div>
-  </div>
-  <!-- STEP 5 -->
-  <div class="sb" id="s5">
-    <div class="sb-num">STEP 05</div><h3>Connection Head</h3>
-    <div class="sdesc">Select terminal head and cable entry.</div>
-    <div class="fg"><label>Head Type</label><select id="selHead" onchange="S.head=this.value;applyConfig()"><option value="none">No Head (Extension Leads)</option><option value="A" selected>Type A — Weatherproof IP65</option><option value="B">Type B — Heavy Duty IP67</option><option value="C">Type C — ATEX Explosion Proof</option><option value="D">Type D — Miniature IP54</option><option value="E">Type E — Dual Compartment IP65</option></select></div>
-    <div class="fg"><label>Terminal Material</label><select><option>Ceramic</option><option>Steatite</option><option>Bakelite</option></select></div>
-    <div class="fg"><label>Cable Entry</label><select><option>M20×1.5</option><option>½" NPT</option><option>PG13.5</option></select></div>
-    <div class="navbtns"><button class="bb" onclick="goStep(4)">← BACK</button><button class="nb" onclick="goStep(6)">NEXT →</button></div>
-  </div>
-  <!-- STEP 6 -->
-  <div class="sb" id="s6">
-    <div class="sb-num">STEP 06</div><h3>Extension Cable</h3>
-    <div class="sdesc">Configure cable type, shielding, and length. Changes are shown in the 3D viewport.</div>
-    <div class="fg"><label>Cable Type</label><select id="selCable" onchange="S.cable=this.value;applyConfig()"><option value="none">No cable needed</option><option value="comp" selected>Compensating</option><option value="ext">Extension Grade</option><option value="rtd">RTD 3-Wire</option></select></div>
-    <div class="fg"><label>Shielding</label><select onchange="S.cableShield=this.value;applyConfig()"><option value="unshielded">Unshielded</option><option value="shielded">Braided Shield</option><option value="armored">SS Armored</option></select></div>
-    <div class="fg"><label>Cable Length (m)</label><div class="rg"><input type="range" min="0.5" max="50" step="0.5" value="2.0" oninput="S.cableLen=parseFloat(this.value);document.getElementById('rvCbl').textContent=parseFloat(this.value).toFixed(1);applyConfig()"><span class="rv" id="rvCbl">2.0</span></div></div>
-    <div class="navbtns"><button class="bb" onclick="goStep(5)">← BACK</button><button class="nb" onclick="goStep(7)">NEXT →</button></div>
-  </div>
-  <!-- STEP 7 -->
-  <div class="sb" id="s7">
-    <div class="sb-num">STEP 07</div><h3>Mounting Style</h3>
-    <div class="sdesc">Select installation mounting method.</div>
-    <div class="rcgrid c2" id="mountGrid"></div>
-    <div class="navbtns"><button class="bb" onclick="goStep(6)">← BACK</button><button class="nb" onclick="goStep(8)">NEXT →</button></div>
-  </div>
-  <!-- STEP 8 -->
-  <div class="sb" id="s8">
-    <div class="sb-num">STEP 08</div><h3>Process Connection</h3>
-    <div class="sdesc">Configure process fitting and pressure class.</div>
-    <div class="fg"><label>Connection Type</label><select id="selConn" onchange="S.conn=this.value;applyConfig();valStep8();togThread()"><option value="npt">Threaded — ½" NPT</option><option value="bsp">Threaded — ½" BSP</option><option value="flange-ansi">Flanged — ANSI 150/300</option><option value="flange-din">Flanged — DIN PN16/40</option><option value="compression">Compression Fitting</option><option value="weldin">Socket Weld-In</option><option value="triclamp">Sanitary Tri-Clamp</option></select></div>
-    <div class="fg" id="fgThread"><label>Thread Size</label><select onchange="S.threadSize=this.value;updCode()"><option value="1/4">¼" NPT</option><option value="1/2" selected>½" NPT</option><option value="3/4">¾" NPT</option><option value="1">1" NPT</option></select></div>
-    <div class="fg"><label>Pressure Rating</label><input type="text" id="psiBox" value="3000 PSI" readonly style="color:var(--green);border-color:var(--green);background:rgba(40,201,110,0.06)"></div>
-    <div class="vbox" id="v8"></div>
-    <div class="glbzone" id="glbZone" onclick="document.getElementById('glbIn').click()" ondragover="event.preventDefault();this.classList.add('drag')" ondragleave="this.classList.remove('drag')" ondrop="event.preventDefault();this.classList.remove('drag');onGlbDrop(event)">
-      <div class="gz-icon">⬡</div>
-      <div class="gz-title">DROP GLB FILE OR CLICK TO BROWSE</div>
-      <div class="gz-sub">Replaces the 3D model instantly</div>
-    </div>
-    <input type="file" id="glbIn" accept=".glb" style="display:none" onchange="onGlbInput(event)">
-    <div class="glb-ok" id="glbOk"></div>
-    <div class="navbtns"><button class="bb" onclick="goStep(7)">← BACK</button><button class="gb" onclick="finalize()">✓ FINALIZE</button></div>
-  </div>`;
-  // Populate radio grids
-  populateTypes();populateSheaths();populateJunctions();populateMounts();
-}
-
-function mkRC(parent,items,stateKey,cb){
-  const grid=document.getElementById(parent);
-  items.forEach(it=>{
-    const d=document.createElement('div');d.className='rc'+(S[stateKey]===it.val?' sel':'');
-    d.innerHTML='<div class="rcdot"></div><div class="rc-label">'+it.label+'</div><div class="rc-sub">'+it.sub+'</div>'+(it.sub2?'<div class="rc-sub2">'+it.sub2+'</div>':'');
-    d.onclick=()=>{grid.querySelectorAll('.rc').forEach(c=>c.classList.remove('sel'));d.classList.add('sel');S[stateKey]=it.val;if(cb)cb(it);applyConfig();};
-    grid.appendChild(d);
+  cPan.addEventListener('wheel', e => {
+    camSph.radius = Math.max(2, Math.min(15, camSph.radius + e.deltaY*0.01)); updateCam();
   });
 }
-function populateTypes(){
-  mkRC('typeGrid',[
-    {val:'K',label:'TYPE K',sub:'−200 to 1260°C',sub2:'NiCr / NiAl'},
-    {val:'J',label:'TYPE J',sub:'−40 to 750°C',sub2:'Fe / CuNi'},
-    {val:'T',label:'TYPE T',sub:'−200 to 350°C',sub2:'Cu / CuNi'},
-    {val:'N',label:'TYPE N',sub:'−200 to 1300°C',sub2:'NiCrSi / NiSi'},
-    {val:'R',label:'TYPE R',sub:'0 to 1480°C',sub2:'Pt13Rh / Pt'},
-    {val:'S',label:'TYPE S',sub:'0 to 1480°C',sub2:'Pt10Rh / Pt'}
-  ],'type');
-}
-function populateSheaths(){
-  mkRC('sheathGrid',[
-    {val:'SS316',label:'SS316',sub:'316 Stainless — General purpose',sub2:'To 900°C'},
-    {val:'SS310',label:'SS310',sub:'310 Stainless — High temperature',sub2:'To 1100°C'},
-    {val:'INC600',label:'INC600',sub:'Inconel 600 — Oxidizing envs',sub2:'To 1150°C'},
-    {val:'HAST',label:'HAST',sub:'Hastelloy C — Corrosive media',sub2:'To 1040°C'}
-  ],'sheath',()=>{const v=document.getElementById('v2');v.className='vbox info';v.textContent='✓ Sheath material updated. Verify chemical compatibility.';});
-}
-function populateJunctions(){
-  mkRC('juncGrid',[
-    {val:'grounded',label:'GROUNDED',sub:'Fastest response / Welded to sheath'},
-    {val:'ungrounded',label:'UNGROUNDED',sub:'EMI resistant / ~1.0s response'},
-    {val:'exposed',label:'EXPOSED TIP',sub:'Ultra fast / Gas & air only'},
-    {val:'dual',label:'DUAL ELEMENT',sub:'Redundancy / Safety critical'}
-  ],'junction',it=>{document.getElementById('ds-resp').textContent=RESP_TIME[it.val];});
-}
-function populateMounts(){
-  mkRC('mountGrid',[
-    {val:'fixed',label:'FIXED',sub:'Permanent installation'},
-    {val:'adjustable',label:'ADJUSTABLE',sub:'Variable insertion depth'},
-    {val:'retractable',label:'RETRACTABLE',sub:'Online removal capability'},
-    {val:'spring',label:'SPRING LOADED',sub:'Constant contact pressure'}
-  ],'mount');
+
+function updateCam() {
+  camera.position.setFromSphericalCoords(camSph.radius, camSph.phi, camSph.theta);
+  camera.lookAt(0,0,0); drawDims(); 
 }
 
-function valStep3(){
-  const v=document.getElementById('v3');
-  if(S.dia<3&&S.ins>500){v.className='vbox warn';v.textContent='⚠ Small diameter at long insertion: vibration fatigue risk.';}
-  else if(S.ins>2000){v.className='vbox warn';v.textContent='⚠ Insertion > 2000mm: consider thermowell support.';}
-  else{v.className='vbox';v.textContent='';}
-}
-function valStep8(){
-  const v=document.getElementById('v8');const cd=CONN_DATA[S.conn];
-  document.getElementById('psiBox').value=cd?cd.psi:'—';
-  if((S.conn==='flange-ansi'||S.conn==='flange-din')&&S.dia<6){v.className='vbox err';v.textContent='⊗ Flange not suitable for probe diameter < 6mm.';}
-  else if(S.conn==='bsp'){v.className='vbox warn';v.textContent='⚠ BSP non-standard for North American installations.';}
-  else{v.className='vbox ok';v.textContent='✓ Connection compatible with current probe dimensions.';}
-}
-function togThread(){
-  const hide=['flange-ansi','flange-din','weldin','triclamp'].includes(S.conn);
-  document.getElementById('fgThread').style.display=hide?'none':'block';
-}
+const raycaster = new THREE.Raycaster(); const mouse = new THREE.Vector2();
+let hovered = null; const hLabel = document.getElementById('hover-label');
 
-// Datasheet updates
-function updCode(){
-  const cc=CONN_CODE[S.conn]||'½NPT';
-  const code='TSE-'+S.type+'-'+S.sheath+'-'+S.dia+'D-'+S.ins+'IL-'+cc+'-'+(S.head==='none'?'X':S.head)+'-'+S.cableLen.toFixed(0)+'M';
-  document.getElementById('dscode').textContent=code;
-  updDS();
-}
-function updDS(){
-  const td=TD[S.type]||TD.K;const hm=HEAD_MAT[S.head]||HEAD_MAT.A;const cd=CONN_DATA[S.conn]||CONN_DATA.npt;
-  document.getElementById('ds-type').textContent=S.type;
-  document.getElementById('ds-mt').textContent=td.mt;
-  document.getElementById('ds-sh').textContent=S.sheath;
-  document.getElementById('ds-ins').textContent=S.ins;
-  document.getElementById('ds-ovr').textContent=S.overall;
-  document.getElementById('ds-dia').textContent=S.dia;
-  document.getElementById('ds-acc').textContent=td.acc;
-  document.getElementById('ds-resp').textContent=RESP_TIME[S.junction]||td.resp;
-  document.getElementById('ds-mnt').textContent=S.mount.toUpperCase();
-  document.getElementById('ds-conn').textContent=cd.label;
-  document.getElementById('ds-head').textContent=S.head==='none'?'NONE':'TYPE '+S.head;
-  document.getElementById('ds-ip').textContent=hm.ip||'IP65';
-  document.getElementById('ds-cable').textContent=S.cable==='none'?'NONE':(S.cableLen+'m');
-  // Tags
-  const tags=document.getElementById('dstags');
-  tags.innerHTML='<span class="dtag hi">TYPE '+S.type+'</span><span class="dtag hi">'+S.sheath+'</span><span class="dtag">'+(hm.ip||'IP65')+'</span><span class="dtag">IEC584</span><span class="dtag">'+(CONN_CODE[S.conn]||'½NPT')+'</span><span class="dtag">'+S.junction.toUpperCase()+'</span>';
-}
-
-// GLB handlers
-function onGlbInput(e){if(e.target.files[0])handleGlbFile(e.target.files[0]);}
-function onGlbDrop(e){const f=e.dataTransfer.files[0];if(f&&f.name.endsWith('.glb'))handleGlbFile(f);}
-function handleGlbFile(file){
-  const reader=new FileReader();
-  reader.onload=function(e){buildFromGLB(e.target.result);
-    document.getElementById('glbOk').style.display='block';
-    document.getElementById('glbOk').textContent='✓ Loaded: '+file.name;
-  };reader.readAsArrayBuffer(file);
-}
-function buildFromGLB(buf){
-  const dv=new DataView(buf);
-  if(dv.getUint32(0,true)!==0x46546C67){alert('Invalid GLB');return;}
-  const jsonLen=dv.getUint32(12,true);
-  const jsonStr=new TextDecoder().decode(new Uint8Array(buf,20,jsonLen));
-  const gltf=JSON.parse(jsonStr);
-  const binOff=20+jsonLen+8;
-  const bin=buf.slice(binOff);
-  const group=new THREE.Group();
-  const meshes=[];
-  (gltf.meshes||[]).forEach(mesh=>{
-    (mesh.primitives||[]).forEach(prim=>{
-      const posAcc=gltf.accessors[prim.attributes.POSITION];
-      const posBv=gltf.bufferViews[posAcc.bufferView];
-      const posArr=new Float32Array(bin,posBv.byteOffset||0,posAcc.count*3);
-      const geo=new THREE.BufferGeometry();
-      geo.setAttribute('position',new THREE.BufferAttribute(posArr.slice(),3));
-      if(prim.indices!==undefined){
-        const idxAcc=gltf.accessors[prim.indices];
-        const idxBv=gltf.bufferViews[idxAcc.bufferView];
-        let idxArr;
-        if(idxAcc.componentType===5125)idxArr=new Uint32Array(bin,idxBv.byteOffset||0,idxAcc.count);
-        else idxArr=new Uint16Array(bin,idxBv.byteOffset||0,idxAcc.count);
-        geo.setIndex(new THREE.BufferAttribute(idxArr.slice(),1));
-      }
-      geo.computeVertexNormals();
-      const m=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({color:0x7a9ab8,metalness:0.85,roughness:0.36}));
-      m.castShadow=true;meshes.push(m);
-    });
-  });
-  const names=['probe','fitting','neck','collar','head'];
-  modelParts={};
-  if(meshes.length===1){
-    // Segment single mesh by Y
-    const pos=meshes[0].geometry.attributes.position;
-    let yMin=Infinity,yMax=-Infinity;
-    for(let i=0;i<pos.count;i++){const y=pos.getY(i);if(y<yMin)yMin=y;if(y>yMax)yMax=y;}
-    const range=yMax-yMin;const cuts=[0,0.38,0.54,0.68,0.77,1.0];
-    for(let s=0;s<5;s++){
-      const lo=yMin+cuts[s]*range,hi=yMin+cuts[s+1]*range;
-      const geo=new THREE.BufferGeometry();
-      const verts=[];const idx=meshes[0].geometry.index;
-      const p=meshes[0].geometry.attributes.position;
-      if(idx){
-        for(let i=0;i<idx.count;i+=3){
-          const cy=(p.getY(idx.getX(i))+p.getY(idx.getX(i+1))+p.getY(idx.getX(i+2)))/3;
-          if(cy>=lo&&cy<hi){for(let j=0;j<3;j++){const vi=idx.getX(i+j);verts.push(p.getX(vi),p.getY(vi),p.getZ(vi));}}
-        }
-      }else{
-        for(let i=0;i<p.count;i+=3){
-          const cy=(p.getY(i)+p.getY(i+1)+p.getY(i+2))/3;
-          if(cy>=lo&&cy<hi){for(let j=0;j<3;j++)verts.push(p.getX(i+j),p.getY(i+j),p.getZ(i+j));}
-        }
-      }
-      geo.setAttribute('position',new THREE.BufferAttribute(new Float32Array(verts),3));
-      geo.computeVertexNormals();
-      const mat=new THREE.MeshStandardMaterial({color:0x7a9ab8,metalness:0.85,roughness:0.36});
-      const m=new THREE.Mesh(geo,mat);m.castShadow=true;m.name=names[s];
-      m.userData={label:names[s],baseCol:0x7a9ab8};
-      modelParts[names[s]]=m;group.add(m);
-    }
-  }else{
-    meshes.forEach((m,i)=>{const n=names[i]||('part'+i);m.name=n;m.userData={label:n,baseCol:0x7a9ab8};modelParts[n]=m;group.add(m);});
-  }
-  centerAndAddGroup(group);applyConfig();countVerts();
-}
-
-// Finalize
-function finalize(){
-  const pn='TS-'+Math.random().toString(36).substring(2,8).toUpperCase();
-  document.getElementById('dspart').textContent='PART# '+pn;
-  document.getElementById('dspart').classList.add('final');
-  document.querySelectorAll('.sp').forEach(p=>{p.classList.add('done');p.classList.remove('active');});
-  document.getElementById('stepBadge').textContent='✓ COMPLETE';
-}
-
-// Save / Reset
-function saveConfig(){
-  const blob=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='tempsens-config.json';a.click();
-}
-function resetAll(){if(confirm('Reset all configuration?'))location.reload();}
-
-// PDF Export
-function exportPDF(){
-  renderer.render(scene,camera);
-  const imgData=renderer.domElement.toDataURL('image/jpeg',0.92);
-  setTimeout(()=>_buildPDF(imgData),60);
-}
-function _buildPDF(modelImg){
-  const doc=new window.jspdf.jsPDF('p','mm','a4');
-  const W=210,H=297;
-  const td=TD[S.type]||TD.K;const hm=HEAD_MAT[S.head]||HEAD_MAT.A;const cd=CONN_DATA[S.conn]||CONN_DATA.npt;
-  const code=document.getElementById('dscode').textContent;
-  const now=new Date().toISOString().split('T')[0];
-  // Header
-  doc.setFillColor(0,0,0);doc.rect(0,0,W,22,'F');
-  doc.setFillColor(255,166,0);doc.rect(0,0,3,22,'F');
-  doc.setFont('helvetica','bold');doc.setFontSize(14);doc.setTextColor(255,255,255);doc.text('TEMPSENS',8,12);
-  doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(180,180,180);doc.text('THERMOCOUPLE ASSEMBLY DATASHEET',8,18);
-  doc.setFontSize(8);doc.setTextColor(255,166,0);doc.text(code,W-8,12,{align:'right'});
-  doc.setTextColor(180,180,180);doc.text(now,W-8,18,{align:'right'});
-  doc.setFillColor(255,166,0);doc.rect(0,21,W,0.8,'F');
-  // 3D image + Specs
-  let y=27;
-  doc.setFillColor(248,249,250);doc.rect(8,y,68,72,'F');
-  doc.setDrawColor(255,166,0);doc.setLineWidth(0.3);doc.rect(8,y,68,72,'S');
-  // Corner marks
-  const cx=8,cy=y,cw=68,ch=72,cm=4;
-  doc.line(cx,cy+cm,cx,cy);doc.line(cx,cy,cx+cm,cy);
-  doc.line(cx+cw-cm,cy,cx+cw,cy);doc.line(cx+cw,cy,cx+cw,cy+cm);
-  doc.line(cx,cy+ch-cm,cx,cy+ch);doc.line(cx,cy+ch,cx+cm,cy+ch);
-  doc.line(cx+cw-cm,cy+ch,cx+cw,cy+ch);doc.line(cx+cw,cy+ch-cm,cx+cw,cy+ch);
-  if(modelImg)try{doc.addImage(modelImg,'JPEG',9,y+1,66,70);}catch(e){}
-  // Specs table
-  const sx=82;doc.setFillColor(255,166,0);doc.rect(sx,y,W-sx-8,6,'F');
-  doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(255,255,255);doc.text('TECHNICAL SPECIFICATIONS',sx+3,y+4);
-  const specs=[['TC Type','Type '+S.type],['Max Temp',td.mt+'°C'],['Sheath',S.sheath],['Diameter',S.dia+' mm'],['Insertion',S.ins+' mm'],['Overall',S.overall+' mm'],['Junction',S.junction],['Accuracy',td.acc],['Response',RESP_TIME[S.junction]+'s']];
-  y+=7;
-  specs.forEach((r,i)=>{
-    if(i%2===0){doc.setFillColor(255,255,255);}else{doc.setFillColor(245,245,245);}
-    doc.rect(sx,y,W-sx-8,6.5,'F');
-    doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(80,80,80);doc.text(r[0],sx+3,y+4.5);
-    doc.setTextColor(0,0,0);doc.text(r[1],W-12,y+4.5,{align:'right'});
-    y+=6.5;
-  });
-  // Config Summary
-  y+=6;doc.setFillColor(255,166,0);doc.rect(8,y,3,7,'F');doc.setFillColor(0,0,0);doc.rect(11,y,W-19,7,'F');
-  doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(255,255,255);doc.text('CONFIGURATION SUMMARY',14,y+5);
-  y+=10;
-  const cfgRows=[['Head Type','Type '+(S.head==='none'?'None':S.head),'IP Class',hm.ip||'IP65'],['Connection',cd.label,'Mount',S.mount],['Junction',S.junction,'Standard','IEC 60584'],['Sheath Finish','Polished','Calibration','As-built']];
-  cfgRows.forEach((r,i)=>{
-    if(i%2===0)doc.setFillColor(255,255,255);else doc.setFillColor(245,245,245);
-    doc.rect(8,y,W-16,6,'F');
-    doc.setFont('helvetica','normal');doc.setFontSize(6.5);
-    doc.setTextColor(80,80,80);doc.text(r[0],11,y+4);doc.setTextColor(0,0,0);doc.text(r[1],60,y+4);
-    doc.setTextColor(80,80,80);doc.text(r[2],110,y+4);doc.setTextColor(0,0,0);doc.text(r[3],160,y+4);
-    y+=6;
-  });
-  // Dimensional Summary
-  y+=6;doc.setFillColor(255,166,0);doc.rect(8,y,3,7,'F');doc.setFillColor(0,0,0);doc.rect(11,y,W-19,7,'F');
-  doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(255,255,255);doc.text('DIMENSIONAL SUMMARY',14,y+5);
-  y+=10;
-  const dimBoxes=[['PROBE DIA',S.dia+' mm'],['INSERTION',S.ins+' mm'],['OVERALL L',S.overall+' mm'],['SHEATH',S.sheath]];
-  const bw=(W-16-9)/4;
-  dimBoxes.forEach((b,i)=>{
-    const bx=8+i*(bw+3);
-    doc.setFillColor(248,249,250);doc.rect(bx,y,bw,20,'F');
-    doc.setDrawColor(255,166,0);doc.setLineWidth(0.2);doc.rect(bx,y,bw,20,'S');
-    doc.setFont('helvetica','normal');doc.setFontSize(6);doc.setTextColor(80,80,80);doc.text(b[0],bx+bw/2,y+6,{align:'center'});
-    doc.setFont('helvetica','bold');doc.setFontSize(11);doc.setTextColor(255,166,0);doc.text(b[1],bx+bw/2,y+15,{align:'center'});
-  });
-  y+=26;
-  // Process Connection
-  doc.setFillColor(255,166,0);doc.rect(8,y,3,7,'F');doc.setFillColor(0,0,0);doc.rect(11,y,W-19,7,'F');
-  doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(255,255,255);doc.text('PROCESS CONNECTION DETAILS',14,y+5);
-  y+=10;
-  const pcRows=[['Type',cd.label,'Pressure',cd.psi],['Seal','Metal-to-metal','Temp Limit',td.mt+'°C'],['Material',S.sheath,'Finish','Machined']];
-  pcRows.forEach((r,i)=>{
-    if(i%2===0)doc.setFillColor(255,255,255);else doc.setFillColor(245,245,245);
-    doc.rect(8,y,W-16,6,'F');
-    doc.setFont('helvetica','normal');doc.setFontSize(6.5);
-    doc.setTextColor(80,80,80);doc.text(r[0],11,y+4);doc.setTextColor(0,0,0);doc.text(r[1],60,y+4);
-    doc.setTextColor(80,80,80);doc.text(r[2],110,y+4);doc.setTextColor(0,0,0);doc.text(r[3],160,y+4);
-    y+=6;
-  });
-  // Electrical
-  y+=6;doc.setFillColor(255,166,0);doc.rect(8,y,3,7,'F');doc.setFillColor(0,0,0);doc.rect(11,y,W-19,7,'F');
-  doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(255,255,255);doc.text('ELECTRICAL AND PERFORMANCE',14,y+5);
-  y+=10;
-  const elRows=[['EMF Standard','IEC 60584','Insulation','>1000MΩ @ 500VDC'],['Accuracy',td.acc,'Response',RESP_TIME[S.junction]+'s'],['Cable',S.cable,'Length',S.cableLen+'m']];
-  elRows.forEach((r,i)=>{
-    if(i%2===0)doc.setFillColor(255,255,255);else doc.setFillColor(245,245,245);
-    doc.rect(8,y,W-16,6,'F');
-    doc.setFont('helvetica','normal');doc.setFontSize(6.5);
-    doc.setTextColor(80,80,80);doc.text(r[0],11,y+4);doc.setTextColor(0,0,0);doc.text(r[1],60,y+4);
-    doc.setTextColor(80,80,80);doc.text(r[2],110,y+4);doc.setTextColor(0,0,0);doc.text(r[3],160,y+4);
-    y+=6;
-  });
-  // Order Code
-  y+=6;doc.setFillColor(0,0,0);doc.rect(8,y,W-16,20,'F');
-  doc.setDrawColor(255,166,0);doc.setLineWidth(0.3);doc.rect(8,y,W-16,20,'S');
-  doc.setFillColor(255,166,0);doc.rect(8,y,W-16,5,'F');
-  doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(255,255,255);doc.text('ORDER CODE',11,y+3.5);
-  doc.setFont('courier','bold');doc.setFontSize(11);doc.setTextColor(255,166,0);doc.text(code,11,y+13);
-  const pn=document.getElementById('dspart').textContent;
-  doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(200,200,200);doc.text(pn,W-12,y+13,{align:'right'});
-  y+=26;
-  // Certifications
-  const certs=['IEC 60584','EN 60584','ASTM E230','CE Marking','RoHS','ISO 9001'];
-  const cbw=(W-16-15)/6;
-  certs.forEach((c,i)=>{
-    const cbx=8+i*(cbw+3);
-    doc.setFillColor(255,255,255);doc.rect(cbx,y,cbw,10,'F');
-    doc.setDrawColor(200,200,200);doc.setLineWidth(0.15);doc.rect(cbx,y,cbw,10,'S');
-    doc.setFont('helvetica','normal');doc.setFontSize(5.5);doc.setTextColor(0,0,0);doc.text(c,cbx+cbw/2,y+6,{align:'center'});
-  });
-  // Footer
-  doc.setFillColor(0,0,0);doc.rect(0,H-12,W,12,'F');
-  doc.setFillColor(255,166,0);doc.rect(0,H-12,W,0.5,'F');
-  doc.setFont('helvetica','normal');doc.setFontSize(6);doc.setTextColor(200,200,200);
-  doc.text('Tempsens Instruments (I) Pvt. Ltd. — Temperature Sensing Solutions',W/2,H-5,{align:'center'});
-  doc.text('Page 1 of 1',W-10,H-5,{align:'right'});
-  doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(255,166,0);doc.text('TEMPSENS',10,H-5);
-  doc.save('Tempsens-'+S.type+'-'+S.sheath+'-'+S.ins+'mm.pdf');
-}
-
-// INIT
-buildStepsUI();
-window.addEventListener('resize',resize);
-resize();
-camUpdate();
-animate();
-updDS();
-loadDefaultGLB();
-
-// --- NEW CAPABILITIES: FILE UPLOAD & PARSING ---
-function startManual() {
-  document.getElementById('introScreen').style.display = 'none';
-}
-
-async function handleSpecUpload(e) {
-  const file = e.target.files[0];
-  if(!file) return;
-  const status = document.getElementById('introStatus');
-  status.textContent = 'Parsing ' + file.name + '...';
-  status.style.color = 'var(--yellow)';
-  try {
-    let text = '';
-    if(file.name.toLowerCase().endsWith('.pdf')) {
-      const arr = await file.arrayBuffer();
-      const pdf = await pdfjsLib.getDocument({data: arr}).promise;
-      for(let i=1; i<=pdf.numPages; i++) {
-        const page = await pdf.getPage(i);
-        const content = await page.getTextContent();
-        text += content.items.map(it => it.str).join(' ') + '\n';
-      }
-    } else if(file.name.toLowerCase().endsWith('.docx') || file.name.toLowerCase().endsWith('.doc')) {
-      const arr = await file.arrayBuffer();
-      const res = await mammoth.extractRawText({arrayBuffer: arr});
-      text = res.value;
-    } else {
-      text = await file.text();
-    }
-    
-    extractSpecs(text);
-    status.textContent = 'Specs detected. Starting configurator...';
-    status.style.color = 'var(--green)';
-    setTimeout(() => {
-      document.getElementById('introScreen').style.display = 'none';
-      syncUI();
-    }, 800);
-  } catch (err) {
-    status.textContent = 'Error parsing file: ' + err.message;
-    status.style.color = 'var(--red)';
-    console.error(err);
-  }
-}
-
-function extractSpecs(text) {
-  const mType = text.match(/Type[\s:-]*([KJTNRSE])/i);
-  if(mType) S.type = mType[1].toUpperCase();
+function doHover(e) {
+  const rect = vp.getBoundingClientRect();
+  mouse.set(((e.clientX-rect.left)/rect.width)*2-1, -((e.clientY-rect.top)/rect.height)*2+1);
+  raycaster.setFromCamera(mouse, camera);
+  const ints = raycaster.intersectObjects(tcGroup.children);
   
-  const mSheath = text.match(/(SS316|SS310|INC600|INCONEL|HAST)/i);
-  if(mSheath) {
-     const s = mSheath[1].toUpperCase();
-     S.sheath = s.includes('INCONEL') ? 'INC600' : s;
-  }
-  
-  const mDia = text.match(/(?:dia|diameter|od)[\s:-]*(\d+\.?\d*)\s*mm/i);
-  if(mDia) S.dia = parseFloat(mDia[1]);
-  
-  const mIns = text.match(/(?:insertion|insert|il|l)[\s:-]*(?:length)?[\s:-]*(\d+)\s*mm/i);
-  if(mIns) S.ins = parseInt(mIns[1], 10);
-  
-  const mOvr = text.match(/overall[\s:-]*(?:length)?[\s:-]*(\d+)\s*mm/i);
-  if(mOvr) S.overall = parseInt(mOvr[1], 10);
-
-  const mJunc = text.match(/(ungrounded|grounded|exposed|dual)/i);
-  if(mJunc) S.junction = mJunc[1].toLowerCase();
-
-  const mHead = text.match(/Head[\s:-]*(?:Type)?[\s:-]*(A|B|C|D|E|none)/i);
-  if(mHead) S.head = mHead[1].toLowerCase()==='none'?'none':mHead[1].toUpperCase();
-  
-  const mConn = text.match(/(NPT|BSP|ANSI|DIN|Compression|Tri-?Clamp|Weld)/i);
-  if(mConn){
-     const v = mConn[1].toLowerCase();
-     if(v.includes('npt')) S.conn = 'npt';
-     else if(v.includes('bsp')) S.conn = 'bsp';
-     else if(v.includes('ansi')) S.conn = 'flange-ansi';
-     else if(v.includes('din')) S.conn = 'flange-din';
-     else if(v.includes('compress')) S.conn = 'compression';
-     else if(v.includes('weld')) S.conn = 'weldin';
-     else if(v.includes('clamp')) S.conn = 'triclamp';
-  }
-  
-  const mCbl = text.match(/cable[\s:-]*(compensating|extension|rtd|comp|ext)/i);
-  if(mCbl){
-     const c = mCbl[1].toLowerCase();
-     if(c.startsWith('comp')) S.cable='comp';
-     else if(c.startsWith('ext')) S.cable='ext';
-     else if(c.startsWith('rtd')) S.cable='rtd';
-  }
+  if(hovered) hovered.material.emissive.setHex(0x000000);
+  if(ints.length > 0) {
+    hovered = ints[0].object; hovered.material.emissive.setHex(0x552200); 
+    hLabel.style.display = 'block'; hLabel.style.left = e.clientX+15+'px'; hLabel.style.top = e.clientY-15+'px';
+    hLabel.textContent = hovered.userData.label || "Component";
+  } else { hovered = null; hLabel.style.display = 'none'; }
 }
 
-function syncUI() {
-  buildStepsUI();
-  goStep(1);
-  
-  // Re-sync basic sliders manually
-  const _s = (sel, val, elId) => {
-    const el = document.querySelector(sel);
-    if(el) { el.value = val; document.getElementById(elId).textContent = val; }
-  };
-  _s('input[oninput*="S.dia="]', S.dia, 'rvDia');
-  _s('input[oninput*="S.ins="]', S.ins, 'rvIns');
-  _s('input[oninput*="S.overall="]', S.overall, 'rvOvr');
-  
-  if(document.getElementById('selHead')) document.getElementById('selHead').value = S.head==='NONE'?'none':S.head;
-  if(document.getElementById('selConn')) document.getElementById('selConn').value = S.conn;
-  if(document.getElementById('selCable')) document.getElementById('selCable').value = S.cable;
-  
-  applyConfig();
+const dimCv = document.getElementById('dim-canvas'); const ctx = dimCv.getContext('2d');
+function w2s(x,y,z) {
+  const v = new THREE.Vector3(x,y,z); tcGroup.localToWorld(v); v.project(camera);
+  return { x: (v.x*0.5+0.5)*dimCv.width, y: (-v.y*0.5+0.5)*dimCv.height };
 }
+
+function drawDims() {
+  ctx.clearRect(0,0,dimCv.width, dimCv.height);
+  if(!S.showDims || S.exploded || !tcGroup || !parts.probe) return;
+  ctx.strokeStyle = '#FF6A00'; ctx.fillStyle = '#FF6A00'; ctx.lineWidth = 1; ctx.font = '12px "IBM Plex Mono", monospace';
+  const lScale = S.len / 100; const pt1 = w2s(0.4, 0, 0); const pt2 = w2s(0.4, -lScale, 0);
+  ctx.setLineDash([4, 4]); ctx.beginPath(); ctx.moveTo(pt1.x, pt1.y); ctx.lineTo(pt2.x, pt2.y); ctx.stroke();
+  const m1 = w2s(0, 0, 0); ctx.beginPath(); ctx.moveTo(m1.x, m1.y); ctx.lineTo(pt1.x+10, pt1.y); ctx.stroke();
+  const m2 = w2s(0, -lScale, 0); ctx.beginPath(); ctx.moveTo(m2.x, m2.y); ctx.lineTo(pt2.x+10, pt2.y); ctx.stroke();
+  ctx.setLineDash([]); ctx.fillText(`L = ${S.len} mm`, (pt1.x+pt2.x)/2 + 10, (pt1.y+pt2.y)/2);
+}
+
+function resize() {
+  dimCv.width = vp.clientWidth; dimCv.height = vp.clientHeight;
+  renderer.setSize(vp.clientWidth, vp.clientHeight);
+  camera.aspect = vp.clientWidth/vp.clientHeight; camera.updateProjectionMatrix(); drawDims();
+}
+
+function animate() { requestAnimationFrame(animate); renderer.render(scene, camera); }
+window.onload = () => { init3D(); updateCam(); updateSpecs(); toggleRTD(); };
 </script>
 </body>
 </html>
